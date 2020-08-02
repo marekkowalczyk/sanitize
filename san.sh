@@ -1,10 +1,18 @@
-!/usr/bin/env bash
+#!/usr/bin/env bash
 
-for oname in "$@"; do
+for oname in "$@"
+do
 	filen=$(echo "${oname%.*}")
 	exten=$(echo "${oname##*.}")
-	nfilen=$(sanitize "$filen")
-	nexten=$(sanitize "$exten")
-	nname="$nfilen.$nexten"
-	mv -nv "$oname" "$nname"
+
+	if [ "$exten" = "$filen" ]
+		then
+			nname=$(sanitize "$filen")
+			mv -nv "$oname" "$nname"
+		else
+			nfilen=$(sanitize "$filen")
+			nexten=$(sanitize "$exten")
+			nname="$nfilen.$nexten"
+			mv -nv "$oname" "$nname"
+	fi
 done
