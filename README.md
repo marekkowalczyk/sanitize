@@ -57,3 +57,7 @@ will not work for them, i.e.,
 fails on them and therefore there are no runes to remove by
 
      runes.Remove()
+     
+## Usage with DEVONthink
+
+`DEVONthink-Sanitize-Filenames.applescript` sanitizes names of selected DEVONthink records, while setting the `Finder Comment` fields to original file names. Caution: the contents of the field is overwritten.
