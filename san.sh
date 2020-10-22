@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+oname=""
+filen=""
+exten=""
+nname=""
+
 for oname in "$@"
 do
 	filen=$(echo "${oname%.*}")
