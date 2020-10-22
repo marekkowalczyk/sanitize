@@ -32,45 +32,21 @@ If punctuation is getting in the way of the shell interpreting input correctly, 
 
 All non-ASCII chars will be transformed to their ASCII equivalents, e.g.: 
 
-    'Kąt na łące żre źrebię' → 'kat-na-lace-zre-zrebie'
+`Kąt na łące żre źrebię` --> `kat-na-lace-zre-zrebie`
 
 This is achieved by the function
 
-    runes.Remove(runes.In(unicode.Mn))
+`runes.Remove(runes.In(unicode.Mn))`
 
 which strips all unicode runes of the [[Mark, Nonspacing] characters](https://www.fileformat.info/info/unicode/category/Mn/index.htm) they are possibly combined with. E.g:
 
-    ą
-
-is actually
-
-    a
-
-combined with 
-
-    0328 Below_Attached # Mn ( ̨ ) COMBINING OGONEK
+`ą` is actually `a` combined with `0328 Below_Attached # Mn ( ̨ ) COMBINING OGONEK`.
 
 ([see here for a complete list of Mn characters](https://unicode.org/L2/L2005/05134-nonspacing-pos.html)).
 
-## The curious case of 'Ł' and 'ł'
+### The curious case of 'Ł' and 'ł'
 
-Curiously, however, unlike all other Polish diacritic characters,
-
-    Ł
-
-and 
-
-    ł
-
-are *not* created by combining 
-
-    L
-
-or 
-
-    l
-
-with any [Mark, Nonspacing] character but are characters of their own. Therefore they need to be handled separately, as 
+Curiously, however, unlike all other Polish diacritic characters `Ł` and `ł` are *not* created by combining `L` or `l`with any [Mark, Nonspacing] character but are characters of their own. Therefore they need to be handled separately, as 
 
      runes.Remove(runes.In(unicode.Mn))
 
