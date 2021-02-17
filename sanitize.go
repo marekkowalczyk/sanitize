@@ -29,7 +29,7 @@ func toLower(input string) (output string) {
 
 func replaceNonAlphaNum(input string) (output string) {
 	replaceNonAlphaNum := runes.Map(func(r rune) rune {
-		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
+		if !unicode.Is(unicode.Latin, r) && !unicode.IsDigit(r) {
 			return '-'
 		}
 		return r
