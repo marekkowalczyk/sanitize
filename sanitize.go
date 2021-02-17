@@ -5,15 +5,16 @@
 package main
 
 import (
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
+	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 	"unicode"
-	"os"
-	"fmt"
+
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 func removeIllFormed(input string) (output string) {
@@ -22,7 +23,6 @@ func removeIllFormed(input string) (output string) {
 }
 
 func toLower(input string) (output string) {
-
 	output = strings.ToLower(input)
 	return output
 }
@@ -46,39 +46,6 @@ func removeAccents(input string) (output string) {
 	return output
 }
 
-/*func replaceNonASCII(input string) (output string) {
-	replaceNonASCII := runes.Map(func(r rune) rune {
-		if !(r <= unicode.MaxASCII) {
-			return '-'
-		}
-		return r
-	})
-	output, _, _ = transform.String(replaceNonASCII, input)
-	return output
-}
-*/
-/*func replaceSpaces(input string) (output string) {
-	replaceSpaces := runes.Map(func(r rune) rune {
-		if unicode.Is(unicode.Space, r) {
-			return '-'
-		}
-		return r
-	})
-	output, _, _ = transform.String(replaceSpaces, input)
-	return output
-}*/
-
-/*func replacePunct(input string) (output string) {
-	replacePunct := runes.Map(func(r rune) rune {
-		if unicode.Is(unicode.Punct, r) {
-			return '-'
-		}
-		return r
-	})
-	output, _, _ = transform.String(replacePunct, input)
-	return output
-}
-*/
 func dedupHyp(input string) (output string) {
 	reg, err := regexp.Compile("-{2,}")
 	if err != nil {
@@ -95,18 +62,14 @@ func trimEnds(input string) (output string) {
 	return output
 }
 
-func sanitize(input string) (output string){
-output = trimEnds(dedupHyp(replaceNonAlphaNum(removeAccents(toLower(removeIllFormed(input))))))
-return output
+func sanitize(input string) (output string) {
+	output = trimEnds(dedupHyp(replaceNonAlphaNum(removeAccents(toLower(removeIllFormed(input))))))
+	return output
 }
 
 func main() {
 
-		input := strings.Join(os.Args[1:], "-")
-		
-/*	const input string = "Golang basics - writing unit tests"*/
-	/*	fmt.Println(trimEnds(dedupHyp(replacePunct(replaceSpaces(removeAccents(strings.ToLower(replaceNonASCII(removeIllFormed(input)))))))))*/
-
+	input := strings.Join(os.Args[1:], "-")
 	fmt.Println(sanitize(input))
 
 }
