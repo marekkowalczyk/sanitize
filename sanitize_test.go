@@ -434,6 +434,171 @@ func TestCLIFileRenameSkipClean(t *testing.T) {
 	}
 }
 
+// --- Recursive mode (-r) CLI tests ---
+
+func TestCLIRecursive(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	// Create a directory tree:
+	// dir/
+	//   Hello World.txt
+	//   Sub Dir/
+	//     Café.pdf
+	//     Deep Folder/
+	//       My File.doc
+
+	subDir := filepath.Join(dir, "Sub Dir")
+	deepDir := filepath.Join(subDir, "Deep Folder")
+	os.MkdirAll(deepDir, 0755)
+
+	os.WriteFile(filepath.Join(dir, "Hello World.txt"), []byte("test"), 0644)
+	os.WriteFile(filepath.Join(subDir, "Café.pdf"), []byte("test"), 0644)
+	os.WriteFile(filepath.Join(deepDir, "My File.doc"), []byte("test"), 0644)
+
+	cmd := exec.Command(binary, "-r", dir)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("command failed: %v\noutput: %s", err, out)
+	}
+
+	// Files should be renamed
+	expected := []string{
+		filepath.Join(dir, "hello-world.txt"),
+		filepath.Join(dir, "sub-dir", "cafe.pdf"),
+		filepath.Join(dir, "sub-dir", "deep-folder", "my-file.doc"),
+	}
+	for _, path := range expected {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			t.Errorf("expected %q to exist", path)
+		}
+	}
+
+	// Old paths should not exist
+	gone := []string{
+		filepath.Join(dir, "Hello World.txt"),
+		filepath.Join(dir, "Sub Dir"),
+	}
+	for _, path := range gone {
+		if _, err := os.Stat(path); err == nil {
+			t.Errorf("expected %q to no longer exist", path)
+		}
+	}
+}
+
+func TestCLIRecursiveDryRun(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	subDir := filepath.Join(dir, "Sub Dir")
+	os.MkdirAll(subDir, 0755)
+	os.WriteFile(filepath.Join(subDir, "Café.pdf"), []byte("test"), 0644)
+
+	cmd := exec.Command(binary, "-rn", dir)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("command failed: %v\noutput: %s", err, out)
+	}
+
+	// Nothing should be renamed
+	if _, err := os.Stat(filepath.Join(subDir, "Café.pdf")); os.IsNotExist(err) {
+		t.Error("file should still exist in dry-run mode")
+	}
+
+	// Output should mention renames
+	output := string(out)
+	if !strings.Contains(output, "cafe.pdf") {
+		t.Errorf("dry-run output should show planned renames, got: %q", output)
+	}
+}
+
+func TestCLIRecursiveSkipsClean(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	subDir := filepath.Join(dir, "clean-dir")
+	os.MkdirAll(subDir, 0755)
+	os.WriteFile(filepath.Join(subDir, "hello.txt"), []byte("test"), 0644)
+
+	cmd := exec.Command(binary, "-r", dir)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("command failed: %v\noutput: %s", err, out)
+	}
+
+	// Everything should still exist at original paths
+	if _, err := os.Stat(filepath.Join(subDir, "hello.txt")); os.IsNotExist(err) {
+		t.Error("clean file should still exist")
+	}
+
+	// No output for clean tree
+	if len(strings.TrimSpace(string(out))) > 0 {
+		t.Errorf("should produce no output for clean tree, got: %q", string(out))
+	}
+}
+
+func TestCLIRecursiveNoClobber(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	// Create two files that would collide
+	os.WriteFile(filepath.Join(dir, "Hello World.txt"), []byte("source"), 0644)
+	os.WriteFile(filepath.Join(dir, "hello-world.txt"), []byte("existing"), 0644)
+
+	cmd := exec.Command(binary, "-r", dir)
+	err := cmd.Run()
+	if err == nil {
+		t.Fatal("expected non-zero exit when target already exists")
+	}
+
+	// Existing file should be unchanged
+	content, _ := os.ReadFile(filepath.Join(dir, "hello-world.txt"))
+	if string(content) != "existing" {
+		t.Error("existing file should not have been overwritten")
+	}
+}
+
+func TestCLIRecursiveSanSymlink(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	sanLink := filepath.Join(dir, "san")
+	os.Symlink(binary, sanLink)
+
+	subDir := filepath.Join(dir, "Test Dir")
+	os.MkdirAll(subDir, 0755)
+	os.WriteFile(filepath.Join(subDir, "My File.txt"), []byte("test"), 0644)
+
+	// san -r should work (san auto-enables file mode, -r adds recursion)
+	cmd := exec.Command(sanLink, "-r", dir)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("command failed: %v\noutput: %s", err, out)
+	}
+
+	if _, err := os.Stat(filepath.Join(dir, "test-dir", "my-file.txt")); os.IsNotExist(err) {
+		t.Error("expected recursive rename via san symlink to work")
+	}
+}
+
+func TestCLIRecursiveImpliesFileMode(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	os.WriteFile(filepath.Join(dir, "Hello World.txt"), []byte("test"), 0644)
+
+	// -r without -f should work (implies file mode)
+	cmd := exec.Command(binary, "-r", dir)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("-r without -f should work: %v\noutput: %s", err, out)
+	}
+
+	if _, err := os.Stat(filepath.Join(dir, "hello-world.txt")); os.IsNotExist(err) {
+		t.Error("expected file to be renamed with -r alone")
+	}
+}
+
 // --- Unit tests for individual pipeline stages ---
 
 func TestRemoveIllFormed(t *testing.T) {

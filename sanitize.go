@@ -126,6 +126,67 @@ func renameFiles(paths []string, dryRun bool) int {
 	return exitCode
 }
 
+func renameRecursive(root string, dryRun bool) int {
+	exitCode := 0
+
+	// Collect all entries first, then process depth-first.
+	// We sort by depth (deepest first) so that renaming a child
+	// doesn't invalidate a parent path before we process it.
+	type entry struct {
+		path  string
+		isDir bool
+	}
+	var entries []entry
+
+	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "sanitize: %s: %v\n", path, err)
+			exitCode = 1
+			return nil
+		}
+		// Skip the root directory itself
+		if path == root {
+			return nil
+		}
+		entries = append(entries, entry{path, info.IsDir()})
+		return nil
+	})
+
+	// Process deepest paths first (longer paths = deeper)
+	// Stable sort so sibling order is preserved
+	for i := len(entries) - 1; i >= 0; i-- {
+		e := entries[i]
+		dir := filepath.Dir(e.path)
+		oldName := filepath.Base(e.path)
+		newName := sanitizeFilename(oldName)
+
+		if newName == oldName {
+			continue
+		}
+
+		dst := filepath.Join(dir, newName)
+		if _, err := os.Stat(dst); err == nil && !sameFile(e.path, dst) {
+			fmt.Fprintf(os.Stderr, "sanitize: %s → %s: target already exists\n", e.path, dst)
+			exitCode = 1
+			continue
+		}
+
+		if dryRun {
+			fmt.Fprintf(os.Stderr, "%s → %s\n", e.path, dst)
+			continue
+		}
+
+		if err := os.Rename(e.path, dst); err != nil {
+			fmt.Fprintf(os.Stderr, "sanitize: %s: %v\n", e.path, err)
+			exitCode = 1
+			continue
+		}
+		fmt.Fprintf(os.Stderr, "%s → %s\n", e.path, dst)
+	}
+
+	return exitCode
+}
+
 func scanNullTerminated(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	for i := 0; i < len(data); i++ {
 		if data[i] == 0 {
@@ -147,13 +208,15 @@ var version = "dev"
 
 func main() {
 	fileMode := flag.BoolP("file", "f", false, "rename files instead of sanitizing text")
+	recursive := flag.BoolP("recursive", "r", false, "recursively rename files in directories")
 	dryRun := flag.BoolP("dry-run", "n", false, "dry run: show what would be renamed without renaming")
 	nullDelim := flag.BoolP("null", "0", false, "use null byte as delimiter instead of newline (for stdin mode)")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: sanitize [flags] <text>...
        sanitize -f [-n] <file>...
-       san [-n] <file>...
+       sanitize -r [-n] <dir>...
+       san [-rn] <file|dir>...
        command | sanitize [-0]
 
 Sanitize strings for safe use as filenames. Lowercases, strips diacritics,
@@ -164,11 +227,12 @@ Multiple arguments are joined with hyphens. With no arguments, reads
 lines from stdin (one input per line, one output per line).
 
 Flags:
-  -f, --file      rename files instead of sanitizing text
-  -n, --dry-run   show what would be renamed without renaming
-  -0, --null      use null byte as delimiter (for stdin mode)
-      --version   print version and exit
-  -h, --help      print this help
+  -f, --file        rename files instead of sanitizing text
+  -r, --recursive   recursively rename files in directories
+  -n, --dry-run     show what would be renamed without renaming
+  -0, --null        use null byte as delimiter (for stdin mode)
+      --version     print version and exit
+  -h, --help        print this help
 
 Use -- to separate flags from arguments starting with -.
 Short flags can be combined: -fn equals -f -n.
@@ -181,7 +245,9 @@ Examples:
   find . -print0 | sanitize -0      → null-delimited I/O
   sanitize -f "My File.PDF"         → my-file.pdf
   sanitize -fn *.txt                → dry run (show renames)
+  sanitize -r ~/Downloads/          → recursive rename
   san "My File.PDF"                 → my-file.pdf
+  san -r ~/Downloads/               → recursive rename via san
   sanitize -- -hello                → treats -hello as text
 `)
 	}
@@ -192,10 +258,21 @@ Examples:
 		return
 	}
 
-	if *fileMode || invokedAsSan() {
+	isFileMode := *fileMode || *recursive || invokedAsSan()
+
+	if isFileMode {
 		if flag.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "sanitize: -f requires at least one file argument\n")
 			os.Exit(1)
+		}
+		if *recursive {
+			exitCode := 0
+			for _, dir := range flag.Args() {
+				if code := renameRecursive(dir, *dryRun); code != 0 {
+					exitCode = code
+				}
+			}
+			os.Exit(exitCode)
 		}
 		os.Exit(renameFiles(flag.Args(), *dryRun))
 	}

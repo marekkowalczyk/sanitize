@@ -70,6 +70,16 @@ When the binary is invoked as `san` (via symlink), file rename mode is enabled a
 
 Glob patterns (`*.txt`, `IMG_*.jpg`, etc.) are expanded by the shell before `sanitize` sees them -- this is standard Unix behavior and requires no special handling by the tool.
 
+### Recursive rename (`-r`)
+
+```bash
+sanitize -r ~/Downloads/          # recursively rename all files and dirs
+sanitize -rn ~/Downloads/         # dry run: show what would be renamed
+san -r ~/Downloads/               # same thing via san symlink
+```
+
+Recursive mode walks a directory tree depth-first, sanitizing all filenames and directory names. Deepest entries are renamed first so that parent renames don't invalidate child paths. The `-r` flag implies file mode (`-f`). Combines with `-n` for dry run.
+
 ### Dry run (`-n`)
 
 ```bash
@@ -85,7 +95,7 @@ sanitize --version                     # print version
 sanitize --help                        # print usage
 ```
 
-Short flags can be combined: `-fn` is the same as `-f -n`. Long forms are also available: `--file`, `--dry-run`, `--null`.
+Short flags can be combined: `-fn` is the same as `-f -n`. Long forms are also available: `--file`, `--recursive`, `--dry-run`, `--null`.
 
 ## Transformation pipeline
 
@@ -220,9 +230,9 @@ Flag handling follows POSIX conventions:
 
 | Convention | Example |
 |---|---|
-| Short flags | `-f`, `-n`, `-0` |
-| Combined short flags | `-fn` equals `-f -n` |
-| Long flags | `--file`, `--dry-run`, `--null`, `--version`, `--help` |
+| Short flags | `-f`, `-r`, `-n`, `-0` |
+| Combined short flags | `-fn` equals `-f -n`, `-rn` equals `-r -n` |
+| Long flags | `--file`, `--recursive`, `--dry-run`, `--null`, `--version`, `--help` |
 | `--` separator | `sanitize -- -hello` treats `-hello` as text, not a flag |
 | Unknown flag | prints error to stderr, exits 2 |
 | `--help` | prints usage to stderr, exits 0 |
@@ -250,10 +260,20 @@ The `-f` flag bundles transform + rename into one operation because it's a commo
 
 Different input strings can produce identical output. This is by design -- the tool is lossy.
 
+### Collision risk in file rename mode
+
+Because the transformation is lossy, multiple files in the same directory can sanitize to the same name. For example, `Café.txt`, `cafe!.txt`, and `CAFÉ.txt` all become `cafe.txt`.
+
+**Current protection:** Before each rename, the tool checks whether the target already exists (`os.Stat` + no-clobber). If it does, the rename is skipped with an error. This prevents data loss -- `os.Rename` on Unix silently overwrites, so this check is the sole safeguard.
+
+**Remaining risk -- partial renames:** When renaming multiple files (`-f *.txt`) or recursively (`-r`), the first collision succeeds and subsequent ones are skipped. This leaves you in a half-renamed state: some files moved, others didn't. With `-r` on a deep directory tree this can be especially messy, as some directories may have been renamed while files inside sibling directories were blocked.
+
+**Mitigation:** Always use `-n` (dry run) first on unfamiliar directories to check for collisions before committing to renames. See BACKLOG.md for a planned pre-scan feature that would detect all collisions up front and abort before any renames happen.
+
 ## Testing
 
 ```bash
 go test -v
 ```
 
-The test suite includes 158 cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, dry run, null-delimited I/O, stdin processing, combined flags, and CLI behavior.
+The test suite includes 210+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, and CLI behavior.

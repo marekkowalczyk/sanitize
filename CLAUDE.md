@@ -10,7 +10,7 @@ A Go CLI tool that sanitizes/normalizes strings for safe use as filenames. It lo
 
 ```bash
 go build .                          # build
-go test -v                          # run full test suite (158 cases)
+go test -v                          # run full test suite (210+ cases)
 go test -run TestSanitize -v        # run a specific test group
 ./sanitize "input text here"        # sanitize text
 ./sanitize -f "My File.txt"         # rename a file
@@ -44,6 +44,7 @@ Key design decisions:
 - **Stdin mode**: `echo "text" | sanitize` -- read lines from stdin when no args and input is piped
 - **Null-delimited stdin**: `find . -print0 | sanitize -0` -- use null bytes instead of newlines as delimiters
 - **File mode**: `sanitize -f file.txt` or `san file.txt` -- rename files (splits name/extension, sanitizes each part)
+- **Recursive mode**: `sanitize -r dir/` or `san -r dir/` -- walk a directory tree depth-first, renaming all files and directories
 - When invoked as `san` (via symlink), file rename mode is automatic
 - `--version` prints version and exits
 - `--help` / `-h` prints usage and exits
@@ -55,12 +56,14 @@ Tests are in `sanitize_test.go` and cover:
 - Integration tests for the full `sanitize()` function
 - Pipeline ordering verification
 - Idempotency tests
-- CLI integration tests (stdin, args, exit codes, `-f` mode, `san` symlink, `-0` null mode, `--version`)
+- CLI integration tests (stdin, args, exit codes, `-f` mode, `-r` recursive, `san` symlink, `-0` null mode, `-n` dry run, `--version`)
 
 ## Supporting Files
 
 - `legacy/san.sh` -- Legacy bash wrapper, superseded by `sanitize -f` / `san` symlink
 - `legacy/config.yml` -- Old Super-Linter config, replaced by `.github/workflows/test.yml`
 - `DEVONthink-Sanitize-Filenames.applescript` -- AppleScript for sanitizing DEVONthink record names (saves originals in Finder Comment field). See README for installation instructions.
+- `AAR.md` -- After Action Review / continuous improvement log
+- `BACKLOG.md` -- Feature backlog and planned improvements
 - `CODE-REVIEW.md` -- Code review with issue tracker (all issues resolved)
 - `.github/workflows/test.yml` -- CI: runs `go build` and `go test` on push/PR
