@@ -93,35 +93,41 @@ func sameFile(a, b string) bool {
 	return os.SameFile(infoA, infoB)
 }
 
+// renameOne renames a single file or directory. Returns 0 on success or skip, 1 on error.
+func renameOne(path string, dryRun bool) int {
+	dir := filepath.Dir(path)
+	oldName := filepath.Base(path)
+	newName := sanitizeFilename(oldName)
+
+	if newName == oldName {
+		return 0
+	}
+
+	dst := filepath.Join(dir, newName)
+	if _, err := os.Stat(dst); err == nil && !sameFile(path, dst) {
+		fmt.Fprintf(os.Stderr, "sanitize: %s → %s: target already exists\n", path, dst)
+		return 1
+	}
+
+	if dryRun {
+		fmt.Fprintf(os.Stderr, "%s → %s\n", path, dst)
+		return 0
+	}
+
+	if err := os.Rename(path, dst); err != nil {
+		fmt.Fprintf(os.Stderr, "sanitize: %s: %v\n", path, err)
+		return 1
+	}
+	fmt.Fprintf(os.Stderr, "%s → %s\n", path, dst)
+	return 0
+}
+
 func renameFiles(paths []string, dryRun bool) int {
 	exitCode := 0
 	for _, path := range paths {
-		dir := filepath.Dir(path)
-		oldName := filepath.Base(path)
-		newName := sanitizeFilename(oldName)
-
-		if newName == oldName {
-			continue
+		if code := renameOne(path, dryRun); code != 0 {
+			exitCode = code
 		}
-
-		dst := filepath.Join(dir, newName)
-		if _, err := os.Stat(dst); err == nil && !sameFile(path, dst) {
-			fmt.Fprintf(os.Stderr, "sanitize: %s → %s: target already exists\n", path, dst)
-			exitCode = 1
-			continue
-		}
-
-		if dryRun {
-			fmt.Fprintf(os.Stderr, "%s → %s\n", path, dst)
-			continue
-		}
-
-		if err := os.Rename(path, dst); err != nil {
-			fmt.Fprintf(os.Stderr, "sanitize: %s: %v\n", path, err)
-			exitCode = 1
-			continue
-		}
-		fmt.Fprintf(os.Stderr, "%s → %s\n", path, dst)
 	}
 	return exitCode
 }
@@ -130,13 +136,9 @@ func renameRecursive(root string, dryRun bool) int {
 	exitCode := 0
 
 	// Collect all entries first, then process depth-first.
-	// We sort by depth (deepest first) so that renaming a child
+	// Deepest entries are renamed first so that renaming a child
 	// doesn't invalidate a parent path before we process it.
-	type entry struct {
-		path  string
-		isDir bool
-	}
-	var entries []entry
+	var paths []string
 
 	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -144,44 +146,16 @@ func renameRecursive(root string, dryRun bool) int {
 			exitCode = 1
 			return nil
 		}
-		// Skip the root directory itself
-		if path == root {
-			return nil
+		if path != root {
+			paths = append(paths, path)
 		}
-		entries = append(entries, entry{path, info.IsDir()})
 		return nil
 	})
 
-	// Process deepest paths first (longer paths = deeper)
-	// Stable sort so sibling order is preserved
-	for i := len(entries) - 1; i >= 0; i-- {
-		e := entries[i]
-		dir := filepath.Dir(e.path)
-		oldName := filepath.Base(e.path)
-		newName := sanitizeFilename(oldName)
-
-		if newName == oldName {
-			continue
+	for i := len(paths) - 1; i >= 0; i-- {
+		if code := renameOne(paths[i], dryRun); code != 0 {
+			exitCode = code
 		}
-
-		dst := filepath.Join(dir, newName)
-		if _, err := os.Stat(dst); err == nil && !sameFile(e.path, dst) {
-			fmt.Fprintf(os.Stderr, "sanitize: %s → %s: target already exists\n", e.path, dst)
-			exitCode = 1
-			continue
-		}
-
-		if dryRun {
-			fmt.Fprintf(os.Stderr, "%s → %s\n", e.path, dst)
-			continue
-		}
-
-		if err := os.Rename(e.path, dst); err != nil {
-			fmt.Fprintf(os.Stderr, "sanitize: %s: %v\n", e.path, err)
-			exitCode = 1
-			continue
-		}
-		fmt.Fprintf(os.Stderr, "%s → %s\n", e.path, dst)
 	}
 
 	return exitCode
