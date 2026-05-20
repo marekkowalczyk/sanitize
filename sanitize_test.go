@@ -104,6 +104,137 @@ func TestCLIHelpExitCode(t *testing.T) {
 	}
 }
 
+// --- File rename mode (-f) CLI tests ---
+
+func TestCLIFileRename(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	tests := []struct {
+		name     string
+		filename string
+		want     string
+	}{
+		{"simple", "Hello World.txt", "hello-world.txt"},
+		{"accented", "Café Résumé.pdf", "cafe-resume.pdf"},
+		{"uppercase ext", "Document.PDF", "document.pdf"},
+		{"no extension", "README", "readme"},
+		{"dotfile", ".gitignore", ".gitignore"},
+		{"multiple dots", "my.file.name.tar.gz", "my-file-name-tar.gz"},
+		{"already clean", "hello.txt", "hello.txt"},
+		{"spaces in ext", "file. t x t", "file.t-x-t"},
+		{"polish", "Zażółć gęślą.doc", "zazolc-gesla.doc"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create the source file
+			src := filepath.Join(dir, tt.filename)
+			if err := os.WriteFile(src, []byte("test"), 0644); err != nil {
+				t.Fatalf("failed to create test file: %v", err)
+			}
+
+			cmd := exec.Command(binary, "-f", src)
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				t.Fatalf("command failed: %v\noutput: %s", err, out)
+			}
+
+			// Check that the destination file exists
+			dst := filepath.Join(dir, tt.want)
+			if _, err := os.Stat(dst); os.IsNotExist(err) {
+				t.Errorf("expected %q to exist after rename", dst)
+			}
+
+			// Clean up for next test
+			os.Remove(dst)
+		})
+	}
+}
+
+func TestCLIFileRenameNoClobber(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	// Create source and a conflicting target
+	src := filepath.Join(dir, "Hello World.txt")
+	dst := filepath.Join(dir, "hello-world.txt")
+	os.WriteFile(src, []byte("source"), 0644)
+	os.WriteFile(dst, []byte("existing"), 0644)
+
+	cmd := exec.Command(binary, "-f", src)
+	err := cmd.Run()
+	if err == nil {
+		t.Fatal("expected non-zero exit when target already exists")
+	}
+
+	// Source should still exist (not deleted)
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		t.Error("source file should not have been removed")
+	}
+
+	// Target should be unchanged
+	content, _ := os.ReadFile(dst)
+	if string(content) != "existing" {
+		t.Error("existing target file should not have been overwritten")
+	}
+}
+
+func TestCLIFileRenameMultiple(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	files := []struct {
+		src  string
+		want string
+	}{
+		{"Hello World.txt", "hello-world.txt"},
+		{"Café.pdf", "cafe.pdf"},
+		{"README", "readme"},
+	}
+
+	var args []string
+	args = append(args, "-f")
+	for _, f := range files {
+		src := filepath.Join(dir, f.src)
+		os.WriteFile(src, []byte("test"), 0644)
+		args = append(args, src)
+	}
+
+	cmd := exec.Command(binary, args...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("command failed: %v\noutput: %s", err, out)
+	}
+
+	for _, f := range files {
+		dst := filepath.Join(dir, f.want)
+		if _, err := os.Stat(dst); os.IsNotExist(err) {
+			t.Errorf("expected %q to exist", dst)
+		}
+	}
+}
+
+func TestCLIFileRenameSkipClean(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	// A file that's already clean should be skipped (no error, no rename)
+	src := filepath.Join(dir, "hello.txt")
+	os.WriteFile(src, []byte("test"), 0644)
+
+	cmd := exec.Command(binary, "-f", src)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("command failed: %v\noutput: %s", err, out)
+	}
+
+	// File should still exist at original path
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		t.Error("clean file should still exist at original path")
+	}
+}
+
 // --- Unit tests for individual pipeline stages ---
 
 func TestRemoveIllFormed(t *testing.T) {
@@ -289,6 +420,10 @@ func TestTrimEnds(t *testing.T) {
 		{"only punctuation", "---", ""},
 		{"single letter", "-a-", "a"},
 		{"leading digit", "-1abc", "1abc"},
+		// Non-Latin letters should be trimmed (consistent with replaceNonAlphaNum using unicode.Latin)
+		{"non-latin leading", "你hello", "hello"},
+		{"non-latin trailing", "hello你", "hello"},
+		{"non-latin both ends", "你hello你", "hello"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

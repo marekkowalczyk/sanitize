@@ -9,6 +9,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"unicode"
@@ -52,7 +53,7 @@ func dedupHyp(input string) string {
 
 func trimEnds(input string) string {
 	return strings.TrimFunc(input, func(r rune) bool {
-		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
+		return !unicode.Is(unicode.Latin, r) && !unicode.IsDigit(r)
 	})
 }
 
@@ -60,9 +61,71 @@ func sanitize(input string) string {
 	return trimEnds(dedupHyp(replaceNonAlphaNum(removeAccents(toLower(removeIllFormed(input))))))
 }
 
+// sanitizeFilename sanitizes a filename, treating name and extension separately.
+// Dotfiles (e.g., .gitignore) are preserved as-is if already clean.
+func sanitizeFilename(name string) string {
+	ext := filepath.Ext(name)
+	base := strings.TrimSuffix(name, ext)
+
+	if base == "" {
+		// Dotfile like .gitignore — ext is the whole name
+		return ext
+	}
+
+	newBase := sanitize(base)
+	if ext == "" {
+		return newBase
+	}
+
+	newExt := sanitize(ext[1:]) // strip the dot before sanitizing
+	if newExt == "" {
+		return newBase
+	}
+	return newBase + "." + newExt
+}
+
+func sameFile(a, b string) bool {
+	infoA, errA := os.Stat(a)
+	infoB, errB := os.Stat(b)
+	if errA != nil || errB != nil {
+		return false
+	}
+	return os.SameFile(infoA, infoB)
+}
+
+func renameFiles(paths []string) int {
+	exitCode := 0
+	for _, path := range paths {
+		dir := filepath.Dir(path)
+		oldName := filepath.Base(path)
+		newName := sanitizeFilename(oldName)
+
+		if newName == oldName {
+			continue
+		}
+
+		dst := filepath.Join(dir, newName)
+		if _, err := os.Stat(dst); err == nil && !sameFile(path, dst) {
+			fmt.Fprintf(os.Stderr, "sanitize: %s → %s: target already exists\n", path, dst)
+			exitCode = 1
+			continue
+		}
+
+		if err := os.Rename(path, dst); err != nil {
+			fmt.Fprintf(os.Stderr, "sanitize: %s: %v\n", path, err)
+			exitCode = 1
+			continue
+		}
+		fmt.Fprintf(os.Stderr, "%s → %s\n", path, dst)
+	}
+	return exitCode
+}
+
 func main() {
+	fileMode := flag.Bool("f", false, "rename files instead of sanitizing text")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: sanitize <text>...
+       sanitize -f <file>...
        command | sanitize
 
 Sanitize strings for safe use as filenames. Lowercases, strips diacritics,
@@ -72,14 +135,26 @@ and trims leading/trailing non-alphanumeric characters.
 Multiple arguments are joined with hyphens. With no arguments, reads
 lines from stdin (one input per line, one output per line).
 
+With -f, renames files by sanitizing their names (preserving extensions).
+Will not overwrite existing files.
+
 Examples:
   sanitize "Hello, World!"          → hello-world
   sanitize "Zażółć gęślą jaźń"     → zazolc-gesla-jazn
   sanitize foo bar baz              → foo-bar-baz
   echo "Café Résumé" | sanitize     → cafe-resume
+  sanitize -f "My File.PDF"         → my-file.pdf
 `)
 	}
 	flag.Parse()
+
+	if *fileMode {
+		if flag.NArg() == 0 {
+			fmt.Fprintf(os.Stderr, "sanitize: -f requires at least one file argument\n")
+			os.Exit(1)
+		}
+		os.Exit(renameFiles(flag.Args()))
+	}
 
 	if flag.NArg() == 0 {
 		stat, _ := os.Stdin.Stat()
