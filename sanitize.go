@@ -121,6 +121,18 @@ func renameFiles(paths []string) int {
 	return exitCode
 }
 
+func scanNullTerminated(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	for i := 0; i < len(data); i++ {
+		if data[i] == 0 {
+			return i + 1, data[:i], nil
+		}
+	}
+	if atEOF && len(data) > 0 {
+		return len(data), data, nil
+	}
+	return 0, nil, nil
+}
+
 func invokedAsSan() bool {
 	base := filepath.Base(os.Args[0])
 	return base == "san"
@@ -130,6 +142,7 @@ var version = "dev"
 
 func main() {
 	fileMode := flag.Bool("f", false, "rename files instead of sanitizing text")
+	nullDelim := flag.Bool("0", false, "use null byte as delimiter instead of newline (for stdin mode)")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: sanitize <text>...
@@ -152,6 +165,7 @@ Examples:
   sanitize "Zażółć gęślą jaźń"     → zazolc-gesla-jazn
   sanitize foo bar baz              → foo-bar-baz
   echo "Café Résumé" | sanitize     → cafe-resume
+  find . -print0 | sanitize -0      → null-delimited I/O
   sanitize -f "My File.PDF"         → my-file.pdf
   san "My File.PDF"                 → my-file.pdf
 `)
@@ -179,16 +193,23 @@ Examples:
 			os.Exit(1)
 		}
 		scanner := bufio.NewScanner(os.Stdin)
+		if *nullDelim {
+			scanner.Split(scanNullTerminated)
+		}
+		delim := "\n"
+		if *nullDelim {
+			delim = "\x00"
+		}
 		for scanner.Scan() {
-			line := scanner.Text()
-			if line == "" {
+			entry := scanner.Text()
+			if entry == "" {
 				continue
 			}
-			result := sanitize(line)
+			result := sanitize(entry)
 			if result == "" {
 				continue
 			}
-			fmt.Println(result)
+			fmt.Print(result + delim)
 		}
 		if err := scanner.Err(); err != nil {
 			fmt.Fprintf(os.Stderr, "sanitize: %v\n", err)

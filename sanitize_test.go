@@ -79,6 +79,35 @@ func TestCLIArgs(t *testing.T) {
 	}
 }
 
+func TestCLIStdinNullDelimited(t *testing.T) {
+	binary := buildBinary(t)
+
+	tests := []struct {
+		name  string
+		stdin string
+		want  string
+	}{
+		{"null separated", "Hello World\x00Café\x00", "hello-world\x00cafe\x00"},
+		{"skip empty segments", "hello\x00\x00world\x00", "hello\x00world\x00"},
+		{"skip segments that sanitize to empty", "!!!\x00hello\x00@@@\x00", "hello\x00"},
+		{"filename with newline", "Hello\nWorld\x00foo\x00", "hello-world\x00foo\x00"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := exec.Command(binary, "-0")
+			cmd.Stdin = strings.NewReader(tt.stdin)
+			out, err := cmd.Output()
+			if err != nil {
+				t.Fatalf("command failed: %v", err)
+			}
+			if string(out) != tt.want {
+				t.Errorf("stdin %q:\ngot:  %q\nwant: %q", tt.stdin, string(out), tt.want)
+			}
+		})
+	}
+}
+
 func TestCLIEmptyStdin(t *testing.T) {
 	binary := buildBinary(t)
 
