@@ -277,3 +277,41 @@ go test -v
 ```
 
 The test suite includes 210+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, and CLI behavior.
+
+## Comparison with similar tools
+
+| Tool | Language | What it does | File rename | Recursive | Dry run |
+|---|---|---|---|---|---|
+| **sanitize** | Go | Opinionated filename sanitizer (lowercase, strip diacritics, Latin-only) | Yes (`-f`, `san`) | Yes (`-r`) | Yes (`-n`) |
+| **[detox](https://github.com/dharple/detox)** | C | Configurable filename cleanup via sequence files (`.detoxrc`) | Yes | Yes | Yes |
+| **[rename/prename](https://metacpan.org/pod/File::Rename)** | Perl | General-purpose renamer using Perl expressions | Yes | No | Yes |
+| **[slugify](https://github.com/benlinton/slugify)** (various) | Bash/Python/Node | String-to-slug conversion | Varies | No | No |
+| **[convmv](https://www.j3e.de/linux/convmv/)** | Perl | Filename *encoding* conversion (e.g., ISO-8859-1 to UTF-8) | Yes | Yes | Yes |
+| **[mmv](https://github.com/itchyny/mmv)** | C | Batch rename with wildcard patterns | Yes | No | No |
+| **[vidir](https://joeyh.name/code/moreutils/)** | Perl | Interactive rename in `$EDITOR` | Yes | No | N/A |
+| **go-slugify, gosimple/slug** | Go | URL slug generation | No (library only) | No | No |
+| **filenamify, sanitize-filename** (npm) | JS | Strip OS-illegal characters | No (library only) | No | No |
+| **python-slugify** (pip) | Python | Transliteration via text-unidecode | Minimal CLI | No | No |
+
+### How sanitize differs
+
+**Closest competitor is detox**, which also cleans filenames, transliterates UTF-8, and has recursive + dry-run modes. detox is more configurable (sequence files), but `sanitize` is zero-config, restricts output to Latin script, and handles special cases like Polish `ł`→`l` and German `ß`→`ss` via NFD decomposition + direct replacement.
+
+**rename/prename** is far more powerful but requires writing Perl expressions -- it's a general renamer, not a sanitizer. `sanitize` trades flexibility for zero-config simplicity.
+
+**slugify scripts** are the closest conceptual match, but are typically string-only transformers with no file operations, recursion, or null-delimited I/O.
+
+### What sanitize offers that others don't
+
+- **Zero-config opinionated pipeline** -- no regex, config files, or flags needed for the common case
+- **Latin-script-only output** -- unique among these tools; non-Latin characters (Chinese, Cyrillic, Arabic) are stripped
+- **Special-case diacritics** -- standalone characters that don't NFD-decompose (`ł`, `ß`) are handled explicitly
+- **Single static binary** -- Go, no runtime dependencies, cross-platform
+- **Full CLI integration** -- `-f` file rename, `-r` recursive, `-n` dry run, `-0` null-delimited stdin, `san` symlink, POSIX-compliant flags
+
+### What others offer that sanitize doesn't
+
+- **detox** -- configurable transliteration tables and wipeup sequences
+- **rename** -- arbitrary transformation logic via Perl expressions
+- **vidir** -- interactive editing of filenames in your text editor
+- **python-slugify** -- broader transliteration coverage via `text-unidecode` (handles more scripts than NFD decomposition)
