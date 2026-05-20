@@ -1,6 +1,108 @@
 package main
 
-import "testing"
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+// --- CLI integration tests (stdin, args, exit codes) ---
+
+// buildBinary builds the sanitize binary once for CLI tests.
+func buildBinary(t *testing.T) string {
+	t.Helper()
+	binary := filepath.Join(t.TempDir(), "sanitize")
+	cmd := exec.Command("go", "build", "-o", binary, ".")
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("failed to build binary: %v", err)
+	}
+	return binary
+}
+
+func TestCLIStdin(t *testing.T) {
+	binary := buildBinary(t)
+
+	tests := []struct {
+		name  string
+		stdin string
+		want  string
+	}{
+		{"single line", "Hello, World!\n", "hello-world\n"},
+		{"multiple lines", "Hello World\nCafé Résumé\nŁódź\n", "hello-world\ncafe-resume\nlodz\n"},
+		{"blank lines skipped", "hello\n\nworld\n", "hello\nworld\n"},
+		{"trailing whitespace trimmed", "hello  \n", "hello\n"},
+		{"lines producing empty output skipped", "!!!\nhello\n@@@\n", "hello\n"},
+		{"mixed real filenames", "Meeting Notes (2024).docx\nIMG_001.jpg\n", "meeting-notes-2024-docx\nimg-001-jpg\n"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := exec.Command(binary)
+			cmd.Stdin = strings.NewReader(tt.stdin)
+			out, err := cmd.Output()
+			if err != nil {
+				t.Fatalf("command failed: %v", err)
+			}
+			if string(out) != tt.want {
+				t.Errorf("stdin %q:\ngot:  %q\nwant: %q", tt.stdin, string(out), tt.want)
+			}
+		})
+	}
+}
+
+func TestCLIArgs(t *testing.T) {
+	binary := buildBinary(t)
+
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{"single arg", []string{"Hello, World!"}, "hello-world\n"},
+		{"multiple args joined", []string{"foo", "bar", "baz"}, "foo-bar-baz\n"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := exec.Command(binary, tt.args...)
+			out, err := cmd.Output()
+			if err != nil {
+				t.Fatalf("command failed: %v", err)
+			}
+			if string(out) != tt.want {
+				t.Errorf("args %v:\ngot:  %q\nwant: %q", tt.args, string(out), tt.want)
+			}
+		})
+	}
+}
+
+func TestCLIEmptyStdin(t *testing.T) {
+	binary := buildBinary(t)
+
+	// Empty piped stdin should succeed with no output (like cat < /dev/null)
+	cmd := exec.Command(binary)
+	cmd.Stdin = strings.NewReader("")
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("empty stdin should exit 0, got: %v", err)
+	}
+	if string(out) != "" {
+		t.Errorf("empty stdin should produce no output, got: %q", string(out))
+	}
+}
+
+func TestCLIHelpExitCode(t *testing.T) {
+	binary := buildBinary(t)
+
+	cmd := exec.Command(binary, "--help")
+	err := cmd.Run()
+	if err != nil {
+		t.Errorf("--help should exit 0, got: %v", err)
+	}
+}
 
 // --- Unit tests for individual pipeline stages ---
 
