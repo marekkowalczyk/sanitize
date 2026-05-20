@@ -93,7 +93,7 @@ func sameFile(a, b string) bool {
 	return os.SameFile(infoA, infoB)
 }
 
-func renameFiles(paths []string) int {
+func renameFiles(paths []string, dryRun bool) int {
 	exitCode := 0
 	for _, path := range paths {
 		dir := filepath.Dir(path)
@@ -108,6 +108,11 @@ func renameFiles(paths []string) int {
 		if _, err := os.Stat(dst); err == nil && !sameFile(path, dst) {
 			fmt.Fprintf(os.Stderr, "sanitize: %s → %s: target already exists\n", path, dst)
 			exitCode = 1
+			continue
+		}
+
+		if dryRun {
+			fmt.Fprintf(os.Stderr, "%s → %s\n", path, dst)
 			continue
 		}
 
@@ -142,6 +147,7 @@ var version = "dev"
 
 func main() {
 	fileMode := flag.Bool("f", false, "rename files instead of sanitizing text")
+	dryRun := flag.Bool("n", false, "dry run: show what would be renamed without renaming")
 	nullDelim := flag.Bool("0", false, "use null byte as delimiter instead of newline (for stdin mode)")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Usage = func() {
@@ -159,6 +165,7 @@ lines from stdin (one input per line, one output per line).
 
 With -f (or when invoked as "san"), renames files by sanitizing their
 names (preserving extensions). Will not overwrite existing files.
+Use -n for a dry run that shows what would be renamed.
 
 Examples:
   sanitize "Hello, World!"          → hello-world
@@ -167,6 +174,7 @@ Examples:
   echo "Café Résumé" | sanitize     → cafe-resume
   find . -print0 | sanitize -0      → null-delimited I/O
   sanitize -f "My File.PDF"         → my-file.pdf
+  sanitize -f -n *.txt              → dry run (show renames)
   san "My File.PDF"                 → my-file.pdf
 `)
 	}
@@ -182,7 +190,7 @@ Examples:
 			fmt.Fprintf(os.Stderr, "sanitize: -f requires at least one file argument\n")
 			os.Exit(1)
 		}
-		os.Exit(renameFiles(flag.Args()))
+		os.Exit(renameFiles(flag.Args(), *dryRun))
 	}
 
 	if flag.NArg() == 0 {

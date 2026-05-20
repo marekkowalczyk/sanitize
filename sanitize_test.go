@@ -227,6 +227,58 @@ func TestCLISanSymlinkNoArgs(t *testing.T) {
 	}
 }
 
+// --- Dry-run mode (-n) CLI tests ---
+
+func TestCLIDryRun(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	src := filepath.Join(dir, "Hello World.txt")
+	os.WriteFile(src, []byte("test"), 0644)
+
+	cmd := exec.Command(binary, "-f", "-n", src)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("command failed: %v\noutput: %s", err, out)
+	}
+
+	// Source should still exist (not renamed)
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		t.Error("source file should still exist in dry-run mode")
+	}
+
+	// Destination should NOT exist
+	dst := filepath.Join(dir, "hello-world.txt")
+	if _, err := os.Stat(dst); err == nil {
+		t.Error("destination should not exist in dry-run mode")
+	}
+
+	// Output should show what would happen
+	output := string(out)
+	if !strings.Contains(output, "hello-world.txt") {
+		t.Errorf("dry-run output should show the target name, got: %q", output)
+	}
+}
+
+func TestCLIDryRunSkipsClean(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	src := filepath.Join(dir, "hello.txt")
+	os.WriteFile(src, []byte("test"), 0644)
+
+	cmd := exec.Command(binary, "-f", "-n", src)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("command failed: %v\noutput: %s", err, out)
+	}
+
+	// No output for already-clean files
+	if len(strings.TrimSpace(string(out))) > 0 {
+		t.Errorf("dry-run should produce no output for clean files, got: %q", string(out))
+	}
+}
+
 // --- File rename mode (-f) CLI tests ---
 
 func TestCLIFileRename(t *testing.T) {
