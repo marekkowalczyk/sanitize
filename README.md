@@ -208,6 +208,30 @@ Without `-ldflags`, the version defaults to `dev`.
 - **Support null delimiters** -- `-0` for filenames containing newlines
 - **Dry run** -- `-n` shows what would happen without doing it
 
+### POSIX compliance
+
+Flag handling follows POSIX conventions:
+
+| Convention | Example |
+|---|---|
+| Short flags | `-f`, `-n`, `-0` |
+| Combined short flags | `-fn` equals `-f -n` |
+| Long flags | `--file`, `--dry-run`, `--null`, `--version`, `--help` |
+| `--` separator | `sanitize -- -hello` treats `-hello` as text, not a flag |
+| Unknown flag | prints error to stderr, exits 2 |
+| `--help` | prints usage to stderr, exits 0 |
+| `--version` | prints version to stdout, exits 0 |
+
+Exit codes:
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | Runtime error (rename failed, target exists, etc.) |
+| 2 | Usage error (unknown flag, missing arguments) |
+
+### The `-f` concession
+
 The `-f` file rename mode is a pragmatic concession. Strictly speaking, a pure Unix tool would only transform text, and you'd compose it with `mv`:
 
 ```bash
@@ -226,4 +250,4 @@ Different input strings can produce identical output. This is by design -- the t
 go test -v
 ```
 
-The test suite includes 155 cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, null-delimited I/O, stdin processing, and CLI behavior.
+The test suite includes 158 cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, dry run, null-delimited I/O, stdin processing, combined flags, and CLI behavior.

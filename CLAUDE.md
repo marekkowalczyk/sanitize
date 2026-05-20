@@ -10,7 +10,7 @@ A Go CLI tool that sanitizes/normalizes strings for safe use as filenames. It lo
 
 ```bash
 go build .                          # build
-go test -v                          # run full test suite (155 cases)
+go test -v                          # run full test suite (158 cases)
 go test -run TestSanitize -v        # run a specific test group
 ./sanitize "input text here"        # sanitize text
 ./sanitize -f "My File.txt"         # rename a file

@@ -151,10 +151,10 @@ func main() {
 	nullDelim := flag.BoolP("null", "0", false, "use null byte as delimiter instead of newline (for stdin mode)")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, `Usage: sanitize <text>...
-       sanitize -f <file>...
-       san <file>...
-       command | sanitize
+		fmt.Fprintf(os.Stderr, `Usage: sanitize [flags] <text>...
+       sanitize -f [-n] <file>...
+       san [-n] <file>...
+       command | sanitize [-0]
 
 Sanitize strings for safe use as filenames. Lowercases, strips diacritics,
 replaces non-alphanumeric characters with hyphens, deduplicates hyphens,
@@ -163,9 +163,15 @@ and trims leading/trailing non-alphanumeric characters.
 Multiple arguments are joined with hyphens. With no arguments, reads
 lines from stdin (one input per line, one output per line).
 
-With -f (or when invoked as "san"), renames files by sanitizing their
-names (preserving extensions). Will not overwrite existing files.
-Use -n for a dry run that shows what would be renamed.
+Flags:
+  -f, --file      rename files instead of sanitizing text
+  -n, --dry-run   show what would be renamed without renaming
+  -0, --null      use null byte as delimiter (for stdin mode)
+      --version   print version and exit
+  -h, --help      print this help
+
+Use -- to separate flags from arguments starting with -.
+Short flags can be combined: -fn equals -f -n.
 
 Examples:
   sanitize "Hello, World!"          → hello-world
@@ -174,8 +180,9 @@ Examples:
   echo "Café Résumé" | sanitize     → cafe-resume
   find . -print0 | sanitize -0      → null-delimited I/O
   sanitize -f "My File.PDF"         → my-file.pdf
-  sanitize -f -n *.txt              → dry run (show renames)
+  sanitize -fn *.txt                → dry run (show renames)
   san "My File.PDF"                 → my-file.pdf
+  sanitize -- -hello                → treats -hello as text
 `)
 	}
 	flag.Parse()
