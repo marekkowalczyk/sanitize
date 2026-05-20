@@ -126,8 +126,11 @@ func invokedAsSan() bool {
 	return base == "san"
 }
 
+var version = "dev"
+
 func main() {
 	fileMode := flag.Bool("f", false, "rename files instead of sanitizing text")
+	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: sanitize <text>...
        sanitize -f <file>...
@@ -154,6 +157,11 @@ Examples:
 `)
 	}
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("sanitize %s\n", version)
+		return
+	}
 
 	if *fileMode || invokedAsSan() {
 		if flag.NArg() == 0 {

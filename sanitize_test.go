@@ -104,6 +104,20 @@ func TestCLIHelpExitCode(t *testing.T) {
 	}
 }
 
+func TestCLIVersion(t *testing.T) {
+	binary := buildBinary(t)
+
+	cmd := exec.Command(binary, "--version")
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("--version failed: %v", err)
+	}
+	output := strings.TrimSpace(string(out))
+	if !strings.HasPrefix(output, "sanitize ") {
+		t.Errorf("--version output should start with 'sanitize ', got: %q", output)
+	}
+}
+
 // --- Args[0] "san" symlink tests ---
 
 func TestCLISanSymlink(t *testing.T) {
