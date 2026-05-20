@@ -5,6 +5,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -68,8 +69,28 @@ func sanitize(input string) (output string) {
 }
 
 func main() {
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `Usage: sanitize <text>...
 
-	input := strings.Join(os.Args[1:], "-")
+Sanitize strings for safe use as filenames. Lowercases, strips diacritics,
+replaces non-alphanumeric characters with hyphens, deduplicates hyphens,
+and trims leading/trailing non-alphanumeric characters.
+
+Multiple arguments are joined with hyphens.
+
+Examples:
+  sanitize "Hello, World!"          → hello-world
+  sanitize "Zażółć gęślą jaźń"     → zazolc-gesla-jazn
+  sanitize foo bar baz              → foo-bar-baz
+`)
+	}
+	flag.Parse()
+
+	if flag.NArg() == 0 {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	input := strings.Join(flag.Args(), "-")
 	fmt.Println(sanitize(input))
-
 }

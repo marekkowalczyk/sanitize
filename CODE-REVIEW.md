@@ -114,6 +114,57 @@ sanitize -f file1.txt file2.PDF  # file rename mode
 
 The file rename mode would: split name from extension, sanitize each part, check the target doesn't already exist, and rename (printing old → new like `mv -v`).
 
+## Unix Citizenship
+
+`sanitize` produces correct output but can't participate in Unix pipelines or workflows. Measured against standard CLI conventions:
+
+### Missing (important)
+
+**11. No stdin support (high)**
+
+A proper Unix filter reads from stdin when no args are given. Currently `echo "foo" | sanitize` and `cat list.txt | sanitize` don't work. This is the biggest gap — it prevents composition with pipes.
+
+**12. No meaningful exit codes (medium)**
+
+Always exits 0. Should exit non-zero on error (no input, empty output). `./sanitize` with no args silently succeeds with an empty line.
+
+**13. No `--help` / `-h` (medium)**
+
+No usage message. Every Unix tool should have this.
+
+### Missing (nice-to-have)
+
+**14. No `--version` flag (low)**
+
+Minor but standard for distributed binaries.
+
+**15. Errors go to stdout (low)**
+
+No distinction between output and diagnostics. Errors and usage messages should go to stderr.
+
+**16. No `--` separator support (low)**
+
+Can't distinguish flags from arguments starting with `-`.
+
+**17. No per-line stdin processing (low)**
+
+When reading from stdin, the tool should process one input per line and output one result per line. This enables `xargs`, `parallel`, and other standard composition patterns.
+
+**18. No null-delimiter mode (low)**
+
+For filenames with newlines (rare but real), tools like `find -print0 | xargs -0` expect null-delimited I/O. A `-0` flag would support this.
+
+### What it already does right
+
+- Single-purpose tool (one job, does it well)
+- Output to stdout with trailing newline
+- No chatty or decorative output
+- Deterministic, no side effects
+
+### Suggested priority
+
+Adding stdin support (#11), exit codes (#12), and `--help` (#13) would make `sanitize` a proper Unix citizen that composes with other tools. These pair naturally with the `-f` file rename mode proposed above — a `flag`-based CLI would handle `--help`, `--`, and `-f` together.
+
 ## Summary
 
 | # | File | Severity | Description |
@@ -128,3 +179,11 @@ The file rename mode would: split name from extension, sanitize each part, check
 | 8 | san.sh | Low | Unnecessary `echo` in parameter expansion |
 | 9 | AppleScript | Medium | Single quotes in filenames cause shell injection risk |
 | 10 | san.sh | Low | Doesn't handle file paths, only bare filenames |
+| 11 | sanitize.go | High | No stdin support — can't participate in pipelines |
+| 12 | sanitize.go | Medium | No meaningful exit codes |
+| 13 | sanitize.go | Medium | No `--help` / `-h` flag |
+| 14 | sanitize.go | Low | No `--version` flag |
+| 15 | sanitize.go | Low | Errors go to stdout instead of stderr |
+| 16 | sanitize.go | Low | No `--` separator support |
+| 17 | sanitize.go | Low | No per-line stdin processing |
+| 18 | sanitize.go | Low | No null-delimiter (`-0`) mode |
