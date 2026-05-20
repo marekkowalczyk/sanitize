@@ -1,63 +1,145 @@
 # sanitize
 
-Sanitize / normalize a string for use as a safe filename.
+A Go CLI tool that sanitizes/normalizes strings for safe use as filenames.
 
-Usage: `sanitize <input-text>`
+It lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims leading/trailing non-alphanumeric characters. Output is restricted to Latin-script characters, digits, and hyphens.
 
-Examples:
+## Installation
 
-- `sanitize This Is a TEXT` --> `this-is-a-text`
-- `sanitize THIS_is a+a-TEXT` --> `this-is-a-text`
+```bash
+go install
+```
 
-Caution: Different input strings can result in identical output.
+This installs the `sanitize` binary to `$GOPATH/bin` (typically `~/go/bin`).
 
-All punctuation and spaces are converted to single `-`. No `-`s are left at the beginning or end of output string. All capital letters are converted to lowercase (see Issue #1). 
+To also use the `san` shortcut for file renaming:
 
-- `sanitize 1 2 3` --> `1-2-3`
+```bash
+ln -s ~/go/bin/sanitize /usr/local/bin/san
+```
 
-Numbers are not affected.
+## Usage
 
-- `sanitize Łączność` --> `lacznosc`
+### Sanitize text
 
-Diacritics are converted to their basic letters of the English alphabet.
+```bash
+sanitize "Hello, World!"              # hello-world
+sanitize "Zażółć gęślą jaźń"          # zazolc-gesla-jazn
+sanitize "Straße nach München"         # strasse-nach-munchen
+sanitize foo bar baz                   # foo-bar-baz (multiple args joined)
+```
 
-If punctuation is getting in the way of the shell interpreting input correctly, escape `"input"` with quotes.
+### Read from stdin
 
-- `sanitize abc; de` --> `bash` throws an error `de: command not found`
-- `sanitize "abc; de"` --> `abc-de` works as expected
+```bash
+echo "Café Résumé" | sanitize          # cafe-resume
+cat filenames.txt | sanitize           # one output per line
+```
 
-`san.sh <filenames>` is just a wrapper that parses filenames into names and extensions, calls `sanitize` on both and renames original files (will not overwrite existing files).
+When no arguments are given and input is piped, `sanitize` reads one line at a time from stdin and outputs one sanitized line per line. Blank lines and lines that sanitize to empty are skipped.
+
+### Rename files (`-f` or `san`)
+
+```bash
+sanitize -f "My Document.PDF"         # renames to my-document.pdf
+sanitize -f *.txt                      # rename multiple files
+san "My Document.PDF"                  # same as sanitize -f
+san *.txt                              # same as sanitize -f *.txt
+```
+
+File rename mode splits the filename from its extension, sanitizes each part separately, and renames the file. It will not overwrite existing files. Renames are printed to stderr.
+
+When the binary is invoked as `san` (via symlink), file rename mode is enabled automatically without needing `-f`.
+
+## Transformation pipeline
+
+```
+input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> dedupHyp -> trimEnds -> output
+```
+
+1. **removeIllFormed** -- replace ill-formed UTF-8 sequences
+2. **toLower** -- lowercase the entire string
+3. **removeAccents** -- NFD decomposition + strip combining marks (unicode.Mn), plus special-case replacements for standalone characters that don't decompose (`l` -> `l`, `ss` -> `ss`)
+4. **replaceNonAlphaNum** -- replace anything outside `unicode.Latin` and digits with `-`
+5. **dedupHyp** -- collapse runs of `--` into a single `-`
+6. **trimEnds** -- strip leading/trailing non-Latin, non-digit characters
 
 ## Handling of non-ASCII characters
 
-All non-ASCII chars will be transformed to their ASCII equivalents, e.g.: 
+All non-ASCII characters are transformed to their ASCII equivalents where possible:
 
-`Kąt na łące żre źrebię` --> `kat-na-lace-zre-zrebie`
+```
+Kąt na łące żre źrebię   ->   kat-na-lace-zre-zrebie
+```
 
-This is achieved by the function
+This is achieved by Unicode NFD decomposition followed by removal of [Mark, Nonspacing](https://www.fileformat.info/info/unicode/category/Mn/index.htm) characters. For example, `ą` is `a` combined with `COMBINING OGONEK` (U+0328) -- removing the combining mark leaves `a`.
 
-`runes.Remove(runes.In(unicode.Mn))`
+### Special cases
 
-which strips all unicode runes of the [[Mark, Nonspacing] characters](https://www.fileformat.info/info/unicode/category/Mn/index.htm) they are possibly combined with. E.g:
+Some characters are standalone Latin letters that don't decompose into base + combining mark:
 
-`ą` is actually `a` combined with `0328 Below_Attached # Mn ( ̨ ) COMBINING OGONEK`.
+- `l`/`L` -> `l`/`L` (Polish barred L)
+- `ss` -> `ss` (German eszett)
 
-([see here for a complete list of Mn characters](https://unicode.org/L2/L2005/05134-nonspacing-pos.html)).
+These are handled with direct string replacement.
 
-### The curious case of 'Ł' and 'ł'
+### Non-Latin scripts
 
-Curiously, however, unlike all other Polish diacritic characters `Ł` and `ł` are *not* created by combining `L` or `l`with any [Mark, Nonspacing] character but are characters of their own. Therefore they need to be handled separately, as 
+Characters from non-Latin scripts (Chinese, Cyrillic, Arabic, etc.) are replaced with hyphens and then cleaned up by deduplication and trimming:
 
-     runes.Remove(runes.In(unicode.Mn))
+```
+Hello你好World   ->   hello-world
+```
 
-will not work for them, i.e., 
+## Migrating from san.sh
 
-    runes.In(unicode.Mn)
+If you previously used `san.sh` as a bash wrapper for file renaming, the functionality is now built into the Go binary. To migrate:
 
-fails on them and therefore there are no runes to remove by
+1. **Build and test locally** (without touching your installed tools):
+   ```bash
+   go build -o ./sanitize .
+   ln -s ./sanitize ./san
+   ./san "Test File.txt"              # verify it works
+   ```
 
-     runes.Remove()
-     
-## Usage with DEVONthink
+2. **Install the updated binary**:
+   ```bash
+   go install                         # updates ~/go/bin/sanitize
+   ```
 
-`DEVONthink-Sanitize-Filenames.applescript` sanitizes names of selected DEVONthink records, while setting the `Finder Comment` fields to original file names. Caution: the contents of the field is overwritten.
+3. **Replace the old san.sh** (back up first):
+   ```bash
+   cp /usr/local/bin/san /usr/local/bin/san.sh.bak
+   ln -sf ~/go/bin/sanitize /usr/local/bin/san
+   ```
+
+4. **Verify**:
+   ```bash
+   which san                          # should show /usr/local/bin/san
+   san --help                         # should show usage with -f mode
+   ```
+
+After migration, `san.sh` and `san.sh.bak` can be removed when you're confident everything works.
+
+### Behavioral differences from san.sh
+
+- Dotfiles (e.g., `.gitignore`) are preserved as-is (san.sh would strip the dot)
+- Already-clean files are skipped silently (san.sh would call `mv` anyway)
+- Full path support (san.sh only worked with bare filenames)
+- Case-only renames work on macOS (san.sh's `mv -n` would block them)
+
+## Caution
+
+Different input strings can produce identical output. This is by design -- the tool is lossy.
+
+## DEVONthink integration
+
+`DEVONthink-Sanitize-Filenames.applescript` sanitizes names of selected DEVONthink records, setting the `Finder Comment` field to the original filename. Note: the existing Finder Comment is overwritten.
+
+## Testing
+
+```bash
+go test -v
+```
+
+The test suite includes 150+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, stdin processing, and CLI behavior.

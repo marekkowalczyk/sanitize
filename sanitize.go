@@ -121,11 +121,17 @@ func renameFiles(paths []string) int {
 	return exitCode
 }
 
+func invokedAsSan() bool {
+	base := filepath.Base(os.Args[0])
+	return base == "san"
+}
+
 func main() {
 	fileMode := flag.Bool("f", false, "rename files instead of sanitizing text")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: sanitize <text>...
        sanitize -f <file>...
+       san <file>...
        command | sanitize
 
 Sanitize strings for safe use as filenames. Lowercases, strips diacritics,
@@ -135,8 +141,8 @@ and trims leading/trailing non-alphanumeric characters.
 Multiple arguments are joined with hyphens. With no arguments, reads
 lines from stdin (one input per line, one output per line).
 
-With -f, renames files by sanitizing their names (preserving extensions).
-Will not overwrite existing files.
+With -f (or when invoked as "san"), renames files by sanitizing their
+names (preserving extensions). Will not overwrite existing files.
 
 Examples:
   sanitize "Hello, World!"          → hello-world
@@ -144,11 +150,12 @@ Examples:
   sanitize foo bar baz              → foo-bar-baz
   echo "Café Résumé" | sanitize     → cafe-resume
   sanitize -f "My File.PDF"         → my-file.pdf
+  san "My File.PDF"                 → my-file.pdf
 `)
 	}
 	flag.Parse()
 
-	if *fileMode {
+	if *fileMode || invokedAsSan() {
 		if flag.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "sanitize: -f requires at least one file argument\n")
 			os.Exit(1)

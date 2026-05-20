@@ -167,23 +167,25 @@ Adding stdin support (#11), exit codes (#12), and `--help` (#13) would make `san
 
 ## Summary
 
-| # | File | Severity | Description |
-|---|------|----------|-------------|
-| 1 | go.mod | High | Missing `require` for `golang.org/x/text`; run `go mod tidy` |
-| 2 | sanitize.go | Low | Regex recompiled on every call in `dedupHyp` |
-| 3 | sanitize.go | Low | Named returns add verbosity without benefit |
-| 4 | sanitize.go | Medium | Variable shadows function name in `replaceNonAlphaNum` |
-| 5 | go.mod | Medium | No `go.sum` committed |
-| 6 | sanitize.go | Low | No usage message when called with no arguments |
-| 7 | sanitize.go | Low | `trimEnds` and `replaceNonAlphaNum` use different letter predicates |
-| 8 | san.sh | Low | Unnecessary `echo` in parameter expansion |
-| 9 | AppleScript | Medium | Single quotes in filenames cause shell injection risk |
-| 10 | san.sh | Low | Doesn't handle file paths, only bare filenames |
-| 11 | sanitize.go | High | No stdin support — can't participate in pipelines |
-| 12 | sanitize.go | Medium | No meaningful exit codes |
-| 13 | sanitize.go | Medium | No `--help` / `-h` flag |
-| 14 | sanitize.go | Low | No `--version` flag |
-| 15 | sanitize.go | Low | Errors go to stdout instead of stderr |
-| 16 | sanitize.go | Low | No `--` separator support |
-| 17 | sanitize.go | Low | No per-line stdin processing |
-| 18 | sanitize.go | Low | No null-delimiter (`-0`) mode |
+| # | File | Severity | Status | Description |
+|---|------|----------|--------|-------------|
+| 1 | go.mod | High | Fixed | Missing `require` for `golang.org/x/text`; run `go mod tidy` |
+| 2 | sanitize.go | Low | Fixed | Regex recompiled on every call in `dedupHyp` |
+| 3 | sanitize.go | Low | Fixed | Named returns add verbosity without benefit |
+| 4 | sanitize.go | Medium | Fixed | Variable shadows function name in `replaceNonAlphaNum` |
+| 5 | go.mod | Medium | Fixed | No `go.sum` committed |
+| 6 | sanitize.go | Low | Fixed | No usage message when called with no arguments |
+| 7 | sanitize.go | Low | Fixed | `trimEnds` and `replaceNonAlphaNum` use different letter predicates |
+| 8 | san.sh | Low | Superseded | Unnecessary `echo` in parameter expansion |
+| 9 | AppleScript | Medium | Open | Single quotes in filenames cause shell injection risk |
+| 10 | san.sh | Low | Superseded | Doesn't handle file paths, only bare filenames |
+| 11 | sanitize.go | High | Fixed | No stdin support — can't participate in pipelines |
+| 12 | sanitize.go | Medium | Fixed | No meaningful exit codes |
+| 13 | sanitize.go | Medium | Fixed | No `--help` / `-h` flag |
+| 14 | sanitize.go | Low | Open | No `--version` flag |
+| 15 | sanitize.go | Low | Fixed | Errors go to stdout instead of stderr |
+| 16 | sanitize.go | Low | Fixed | No `--` separator support (provided by Go `flag` package) |
+| 17 | sanitize.go | Low | Fixed | No per-line stdin processing |
+| 18 | sanitize.go | Low | Open | No null-delimiter (`-0`) mode |
+
+**Notes:** #8 and #10 are superseded by folding `san.sh` into the Go binary (`sanitize -f` / `san` symlink). #16 comes for free with Go's `flag` package. The AppleScript injection (#9) is still open.

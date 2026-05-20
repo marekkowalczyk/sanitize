@@ -104,6 +104,86 @@ func TestCLIHelpExitCode(t *testing.T) {
 	}
 }
 
+// --- Args[0] "san" symlink tests ---
+
+func TestCLISanSymlink(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	// Create a "san" symlink to the binary
+	sanLink := filepath.Join(dir, "san")
+	if err := os.Symlink(binary, sanLink); err != nil {
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	// Create a test file
+	src := filepath.Join(dir, "Hello World.txt")
+	os.WriteFile(src, []byte("test"), 0644)
+
+	// Invoke via "san" symlink — should auto-enable file rename mode
+	cmd := exec.Command(sanLink, src)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("san command failed: %v\noutput: %s", err, out)
+	}
+
+	dst := filepath.Join(dir, "hello-world.txt")
+	if _, err := os.Stat(dst); os.IsNotExist(err) {
+		t.Errorf("expected %q to exist after rename via san symlink", dst)
+	}
+}
+
+func TestCLISanSymlinkMultiple(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	sanLink := filepath.Join(dir, "san")
+	os.Symlink(binary, sanLink)
+
+	files := []struct {
+		src  string
+		want string
+	}{
+		{"Café.pdf", "cafe.pdf"},
+		{"My Document.txt", "my-document.txt"},
+	}
+
+	var args []string
+	for _, f := range files {
+		src := filepath.Join(dir, f.src)
+		os.WriteFile(src, []byte("test"), 0644)
+		args = append(args, src)
+	}
+
+	cmd := exec.Command(sanLink, args...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("command failed: %v\noutput: %s", err, out)
+	}
+
+	for _, f := range files {
+		dst := filepath.Join(dir, f.want)
+		if _, err := os.Stat(dst); os.IsNotExist(err) {
+			t.Errorf("expected %q to exist", dst)
+		}
+	}
+}
+
+func TestCLISanSymlinkNoArgs(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	sanLink := filepath.Join(dir, "san")
+	os.Symlink(binary, sanLink)
+
+	// "san" with no args should show usage and exit non-zero
+	cmd := exec.Command(sanLink)
+	err := cmd.Run()
+	if err == nil {
+		t.Fatal("expected non-zero exit with no args")
+	}
+}
+
 // --- File rename mode (-f) CLI tests ---
 
 func TestCLIFileRename(t *testing.T) {
