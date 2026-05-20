@@ -16,3 +16,16 @@ Continuous improvement log. Each session ends with a brief review: what went wel
 **What we'll do differently:**
 - For new flags, decide the interaction with existing flags *before* writing tests (sketch the flag matrix)
 - Pre-scan collision detection should be implemented before recommending `-r` for production use on large trees — prioritize this in the next session
+
+## 2026-05-20 — Competitive analysis, refactor renameOne
+
+**What went well:**
+- Competitive analysis surfaced that sanitize's niche (zero-config, Latin-only, single binary with full file ops) is genuinely unoccupied — detox is the closest but more complex
+- The `renameOne` refactor was clean: -26 net lines, all 210+ tests passed unchanged, proving the test suite is robust against internal restructuring
+- Close checklist caught the stale test count in CLAUDE.md (158 vs 210+) and missing `-r` in the POSIX table — the cross-check step earns its keep
+
+**What didn't go well:**
+- Nothing significant — this was a short, focused continuation
+
+**What we'll do differently:**
+- After adding a feature, immediately grep all docs for the flag set to catch drift (the POSIX table miss was found only during close checklist)
