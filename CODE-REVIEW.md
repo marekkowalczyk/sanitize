@@ -97,6 +97,23 @@ set theNewName to do shell script "~/go/bin/sanitize " & quoted form of theName
 
 If called with `san.sh path/to/file.txt`, it will try to rename the whole path. This is fine if it's only meant to be used in the current directory, but worth noting.
 
+## Recommendation: fold san.sh into the Go binary
+
+`san.sh` is a thin wrapper that splits filenames from extensions, sanitizes both parts, and renames. All of this is straightforward in Go (`filepath.Ext()`, `strings.TrimSuffix()`, `os.Rename()`, `os.Stat()` for no-clobber). Folding it into the Go binary would:
+
+- Eliminate the shell-specific bugs (#8, #10) and the dependency on `sanitize` being in `$PATH`
+- Produce a single distributable binary
+- Allow the AppleScript to call one tool with a flag instead of shelling out separately
+
+Suggested CLI design:
+
+```
+sanitize "some text"             # current behavior — sanitize a string
+sanitize -f file1.txt file2.PDF  # file rename mode
+```
+
+The file rename mode would: split name from extension, sanitize each part, check the target doesn't already exist, and rename (printing old → new like `mv -v`).
+
 ## Summary
 
 | # | File | Severity | Description |
