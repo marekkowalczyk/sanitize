@@ -38,6 +38,15 @@ cat filenames.txt | sanitize           # one output per line
 
 When no arguments are given and input is piped, `sanitize` reads one line at a time from stdin and outputs one sanitized line per line. Blank lines and lines that sanitize to empty are skipped.
 
+#### Null-delimited mode (`-0`)
+
+For filenames that may contain newlines, use `-0` for null-delimited I/O (like `find -print0` / `xargs -0`):
+
+```bash
+find . -print0 | sanitize -0           # null-delimited input and output
+find . -print0 | sanitize -0 | xargs -0 echo
+```
+
 ### Rename files (`-f` or `san`)
 
 ```bash
@@ -51,6 +60,13 @@ File rename mode splits the filename from its extension, sanitizes each part sep
 
 When the binary is invoked as `san` (via symlink), file rename mode is enabled automatically without needing `-f`.
 
+### Other flags
+
+```bash
+sanitize --version                     # print version
+sanitize --help                        # print usage
+```
+
 ## Transformation pipeline
 
 ```
@@ -59,7 +75,7 @@ input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> de
 
 1. **removeIllFormed** -- replace ill-formed UTF-8 sequences
 2. **toLower** -- lowercase the entire string
-3. **removeAccents** -- NFD decomposition + strip combining marks (unicode.Mn), plus special-case replacements for standalone characters that don't decompose (`l` -> `l`, `ss` -> `ss`)
+3. **removeAccents** -- NFD decomposition + strip combining marks (unicode.Mn), plus special-case replacements for standalone characters that don't decompose (`ł` -> `l`, `ß` -> `ss`)
 4. **replaceNonAlphaNum** -- replace anything outside `unicode.Latin` and digits with `-`
 5. **dedupHyp** -- collapse runs of `--` into a single `-`
 6. **trimEnds** -- strip leading/trailing non-Latin, non-digit characters
@@ -78,8 +94,8 @@ This is achieved by Unicode NFD decomposition followed by removal of [Mark, Nons
 
 Some characters are standalone Latin letters that don't decompose into base + combining mark:
 
-- `l`/`L` -> `l`/`L` (Polish barred L)
-- `ss` -> `ss` (German eszett)
+- `ł`/`Ł` -> `l`/`L` (Polish barred L)
+- `ß` -> `ss` (German eszett)
 
 These are handled with direct string replacement.
 
@@ -90,6 +106,36 @@ Characters from non-Latin scripts (Chinese, Cyrillic, Arabic, etc.) are replaced
 ```
 Hello你好World   ->   hello-world
 ```
+
+## DEVONthink integration
+
+`DEVONthink-Sanitize-Filenames.applescript` sanitizes names of selected DEVONthink records, setting the `Finder Comment` field to the original filename. Note: the existing Finder Comment is overwritten.
+
+### Installing the script in DEVONthink
+
+1. Open DEVONthink
+2. Go to **DEVONthink > Preferences > Scripts** (or in DEVONthink 3, the Scripts folder is at `~/Library/Application Scripts/com.devon-technologies.think3/Menu`)
+3. Copy or symlink the script into the DEVONthink scripts folder:
+   ```bash
+   cp DEVONthink-Sanitize-Filenames.applescript \
+     ~/Library/Application\ Scripts/com.devon-technologies.think3/Menu/Sanitize\ Filenames.scpt
+   ```
+   Or compile and copy:
+   ```bash
+   osacompile -o ~/Library/Application\ Scripts/com.devon-technologies.think3/Menu/Sanitize\ Filenames.scpt \
+     DEVONthink-Sanitize-Filenames.applescript
+   ```
+4. The script appears in the **Scripts** menu inside DEVONthink
+5. Select one or more records, then run the script from the menu
+
+The script requires `sanitize` to be installed at `~/go/bin/sanitize` (the default `go install` location).
+
+### What the script does
+
+For each selected record:
+1. Saves the original name to the record's **Finder Comment** field
+2. Runs `sanitize` on the name
+3. Sets the record name to the sanitized result
 
 ## Migrating from san.sh
 
@@ -128,13 +174,17 @@ After migration, `san.sh` and `san.sh.bak` can be removed when you're confident 
 - Full path support (san.sh only worked with bare filenames)
 - Case-only renames work on macOS (san.sh's `mv -n` would block them)
 
+## Building with a version tag
+
+```bash
+go build -ldflags "-X main.version=1.0.0" .
+```
+
+Without `-ldflags`, the version defaults to `dev`.
+
 ## Caution
 
 Different input strings can produce identical output. This is by design -- the tool is lossy.
-
-## DEVONthink integration
-
-`DEVONthink-Sanitize-Filenames.applescript` sanitizes names of selected DEVONthink records, setting the `Finder Comment` field to the original filename. Note: the existing Finder Comment is overwritten.
 
 ## Testing
 
@@ -142,4 +192,4 @@ Different input strings can produce identical output. This is by design -- the t
 go test -v
 ```
 
-The test suite includes 150+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, stdin processing, and CLI behavior.
+The test suite includes 155 cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, null-delimited I/O, stdin processing, and CLI behavior.
