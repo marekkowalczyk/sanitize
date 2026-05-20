@@ -6,7 +6,6 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 	"strings"
 	"unicode"
 
+	flag "github.com/spf13/pflag"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -146,9 +146,9 @@ func invokedAsSan() bool {
 var version = "dev"
 
 func main() {
-	fileMode := flag.Bool("f", false, "rename files instead of sanitizing text")
-	dryRun := flag.Bool("n", false, "dry run: show what would be renamed without renaming")
-	nullDelim := flag.Bool("0", false, "use null byte as delimiter instead of newline (for stdin mode)")
+	fileMode := flag.BoolP("file", "f", false, "rename files instead of sanitizing text")
+	dryRun := flag.BoolP("dry-run", "n", false, "dry run: show what would be renamed without renaming")
+	nullDelim := flag.BoolP("null", "0", false, "use null byte as delimiter instead of newline (for stdin mode)")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: sanitize <text>...

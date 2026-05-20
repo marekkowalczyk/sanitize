@@ -279,6 +279,30 @@ func TestCLIDryRunSkipsClean(t *testing.T) {
 	}
 }
 
+func TestCLIDryRunCombinedFlags(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	src := filepath.Join(dir, "Hello World.txt")
+	os.WriteFile(src, []byte("test"), 0644)
+
+	// Test -fn (combined short flags)
+	cmd := exec.Command(binary, "-fn", src)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("-fn failed: %v\noutput: %s", err, out)
+	}
+
+	// Source should still exist (dry run)
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		t.Error("source file should still exist with -fn")
+	}
+
+	if !strings.Contains(string(out), "hello-world.txt") {
+		t.Errorf("-fn output should show target, got: %q", string(out))
+	}
+}
+
 // --- File rename mode (-f) CLI tests ---
 
 func TestCLIFileRename(t *testing.T) {

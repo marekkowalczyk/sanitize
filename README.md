@@ -2,6 +2,8 @@
 
 A Go CLI tool that sanitizes/normalizes strings for safe use as filenames.
 
+Inspired by the principles in Brian P. Hogan's *Small, Sharp Software Tools*, `sanitize` aims to be a well-behaved Unix citizen: it does one thing well, works with text streams, uses standard I/O conventions, stays quiet, and composes with other tools via pipes.
+
 It lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims leading/trailing non-alphanumeric characters. Output is restricted to Latin-script characters, digits, and hyphens.
 
 ## Installation
@@ -51,7 +53,7 @@ find . -print0 | sanitize -0 | xargs -0 echo
 
 ```bash
 sanitize -f "My Document.PDF"         # renames to my-document.pdf
-sanitize -f *.txt                      # rename multiple files
+sanitize -f *.txt                      # rename multiple files (shell expands the glob)
 san "My Document.PDF"                  # same as sanitize -f
 san *.txt                              # same as sanitize -f *.txt
 ```
@@ -60,12 +62,24 @@ File rename mode splits the filename from its extension, sanitizes each part sep
 
 When the binary is invoked as `san` (via symlink), file rename mode is enabled automatically without needing `-f`.
 
+Glob patterns (`*.txt`, `IMG_*.jpg`, etc.) are expanded by the shell before `sanitize` sees them -- this is standard Unix behavior and requires no special handling by the tool.
+
+### Dry run (`-n`)
+
+```bash
+sanitize -f -n *.txt                   # show what would be renamed
+san -n *.txt                           # same thing
+sanitize -fn *.txt                     # combined short flags also work
+```
+
 ### Other flags
 
 ```bash
 sanitize --version                     # print version
 sanitize --help                        # print usage
 ```
+
+Short flags can be combined: `-fn` is the same as `-f -n`. Long forms are also available: `--file`, `--dry-run`, `--null`.
 
 ## Transformation pipeline
 
@@ -181,6 +195,26 @@ go build -ldflags "-X main.version=1.0.0" .
 ```
 
 Without `-ldflags`, the version defaults to `dev`.
+
+## Design philosophy
+
+`sanitize` follows the Unix tool conventions described in Brian P. Hogan's *Small, Sharp Software Tools*:
+
+- **Do one thing well** -- sanitize strings for filenames, nothing else
+- **Work with text streams** -- reads stdin, writes to stdout, one entry per line
+- **Use standard I/O** -- output to stdout, diagnostics to stderr, meaningful exit codes
+- **Be quiet** -- no banners, progress messages, or decorative output
+- **Be a filter** -- sits in the middle of a pipeline: `cat list.txt | sanitize | xargs ...`
+- **Support null delimiters** -- `-0` for filenames containing newlines
+- **Dry run** -- `-n` shows what would happen without doing it
+
+The `-f` file rename mode is a pragmatic concession. Strictly speaking, a pure Unix tool would only transform text, and you'd compose it with `mv`:
+
+```bash
+for f in *.txt; do mv "$f" "$(sanitize "$f")"; done
+```
+
+The `-f` flag bundles transform + rename into one operation because it's a common workflow that's error-prone to do by hand (splitting extensions, handling no-clobber, case-insensitive filesystems). The `san` symlink makes this even more convenient. This trades Unix purity for daily usability.
 
 ## Caution
 
