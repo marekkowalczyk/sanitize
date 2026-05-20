@@ -42,7 +42,7 @@ func replaceNonAlphaNum(input string) (output string) {
 func removeAccents(input string) (output string) {
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	s, _, _ := transform.String(t, input)
-	r := strings.NewReplacer("ł", "l", "Ł", "L")
+	r := strings.NewReplacer("ł", "l", "Ł", "L", "ß", "ss")
 	output = r.Replace(s)
 	return output
 }
