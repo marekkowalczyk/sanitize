@@ -9,10 +9,16 @@ It lowercases, strips diacritics, replaces non-alphanumeric characters with hyph
 ## Installation
 
 ```bash
+go install github.com/marekkowalczyk/sanitize@latest
+```
+
+Or from a local checkout:
+
+```bash
 go install
 ```
 
-This installs the `sanitize` binary to `$GOPATH/bin` (typically `~/go/bin`).
+Both install the `sanitize` binary to `$GOPATH/bin` (typically `~/go/bin`).
 
 To also use the `san` shortcut for file renaming:
 
@@ -179,7 +185,7 @@ If you previously used `san.sh` as a bash wrapper for file renaming, the functio
    san --help                         # should show usage with -f mode
    ```
 
-After migration, `san.sh` and `san.sh.bak` can be removed when you're confident everything works.
+After migration, `/usr/local/bin/san.sh.bak` can be removed when you're confident everything works. The original `san.sh` is preserved in `legacy/` for reference.
 
 ### Behavioral differences from san.sh
 

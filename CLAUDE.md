@@ -59,6 +59,8 @@ Tests are in `sanitize_test.go` and cover:
 
 ## Supporting Files
 
-- `san.sh` -- Legacy bash wrapper, superseded by `sanitize -f` / `san` symlink
+- `legacy/san.sh` -- Legacy bash wrapper, superseded by `sanitize -f` / `san` symlink
+- `legacy/config.yml` -- Old Super-Linter config, replaced by `.github/workflows/test.yml`
 - `DEVONthink-Sanitize-Filenames.applescript` -- AppleScript for sanitizing DEVONthink record names (saves originals in Finder Comment field). See README for installation instructions.
 - `CODE-REVIEW.md` -- Code review with issue tracker (all issues resolved)
+- `.github/workflows/test.yml` -- CI: runs `go build` and `go test` on push/PR

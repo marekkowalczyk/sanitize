@@ -1,0 +1,13 @@
+# Built binaries
+sanitize
+san
+
+# IDE / editor
+.claude/
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
