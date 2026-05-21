@@ -738,7 +738,7 @@ func TestRemoveAccents(t *testing.T) {
 		{"vietnamese tone marks", "Hà Nội", "Ha Noi"},
 		{"danish slashed o lower", "Ørsted", "Orsted"},
 		{"danish slashed o upper", "ØST", "OST"},
-		{"danish ae ligature", "Ærø", "AerO"},
+		{"danish ae ligature", "Ærø", "AEro"},
 		{"french oe ligature", "œuvre", "oeuvre"},
 		{"french oe ligature upper", "Œuvre", "OEuvre"},
 		{"croatian barred d lower", "đakovo", "dakovo"},
@@ -876,7 +876,137 @@ func TestTrimEnds(t *testing.T) {
 	}
 }
 
+// --- Postcondition validation tests ---
+
+func TestValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		wantErr bool
+	}{
+		// Valid outputs
+		{"empty string", "", false},
+		{"lowercase letters", "hello", false},
+		{"digits", "12345", false},
+		{"hyphens", "a-b-c", false},
+		{"mixed valid", "hello-world-123", false},
+
+		// Invalid outputs — these should never come out of the pipeline,
+		// but if they do, validate MUST catch them
+		{"uppercase letter", "Hello", true},
+		{"space", "hello world", true},
+		{"dot", "file.txt", true},
+		{"underscore", "hello_world", true},
+		{"accented char", "café", true},
+		{"unicode latin", "ł", true},
+		{"non-latin", "你好", true},
+		{"emoji", "hello😀", true},
+		{"special char", "hello!", true},
+		{"leading hyphen", "-hello", true},
+		{"trailing hyphen", "hello-", true},
+		{"only hyphen", "-", true},
+		{"consecutive hyphens", "a--b", true},
+		{"null byte", "hello\x00world", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validate(tt.input)
+			if tt.wantErr && err == nil {
+				t.Errorf("validate(%q) = nil, want error", tt.input)
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("validate(%q) = %v, want nil", tt.input, err)
+			}
+		})
+	}
+}
+
+func TestValidateErrorMessage(t *testing.T) {
+	err := validate("héllo")
+	if err == nil {
+		t.Fatal("expected error for accented char")
+	}
+	msg := err.Error()
+	// Error must identify the offending character and its codepoint
+	if !strings.Contains(msg, "U+") {
+		t.Errorf("error should contain Unicode codepoint, got: %q", msg)
+	}
+}
+
+func TestValidateFilename(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		wantErr bool
+	}{
+		// Valid filename outputs
+		{"simple", "hello.txt", false},
+		{"no extension", "hello", false},
+		{"digits in name", "file-123.pdf", false},
+		{"dotfile", ".gitignore", false},
+		{"empty", "", false},
+
+		// Invalid
+		{"uppercase", "Hello.txt", true},
+		{"space", "hello world.txt", true},
+		{"double dot", "file..txt", true},
+		{"leading dot non-dotfile", "a..txt", true},
+		{"trailing dot", "hello.", true},
+		{"underscore", "hello_world.txt", true},
+		{"accented", "café.txt", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateFilename(tt.input)
+			if tt.wantErr && err == nil {
+				t.Errorf("validateFilename(%q) = nil, want error", tt.input)
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("validateFilename(%q) = %v, want nil", tt.input, err)
+			}
+		})
+	}
+}
+
 // --- Integration tests for the full pipeline ---
+
+// TestSanitizeReturnsError verifies that sanitize returns (string, error)
+// and that the error is nil for all well-known inputs. This is the contract:
+// if sanitize succeeds, the output is guaranteed safe.
+func TestSanitizeReturnsError(t *testing.T) {
+	inputs := []string{
+		"Hello World", "café", "Łódź", "你好", "",
+		"!!!!", "a@b#c", "Meeting Notes (2024).docx",
+	}
+	for _, input := range inputs {
+		result, err := sanitize(input)
+		if err != nil {
+			t.Errorf("sanitize(%q) returned unexpected error: %v", input, err)
+		}
+		// Double-check: validate the result independently
+		if err := validate(result); err != nil {
+			t.Errorf("sanitize(%q) = %q, which fails validation: %v", input, result, err)
+		}
+	}
+}
+
+func TestSanitizeFilenameReturnsError(t *testing.T) {
+	inputs := []string{
+		"Hello World.txt", "café.pdf", ".gitignore", "README",
+		"my.file.name.tar.gz",
+	}
+	for _, input := range inputs {
+		result, err := sanitizeFilename(input)
+		if err != nil {
+			t.Errorf("sanitizeFilename(%q) returned unexpected error: %v", input, err)
+		}
+		if err := validateFilename(result); err != nil {
+			t.Errorf("sanitizeFilename(%q) = %q, which fails validation: %v", input, result, err)
+		}
+	}
+}
 
 func TestSanitize(t *testing.T) {
 	tests := []struct {
@@ -991,7 +1121,10 @@ func TestSanitize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := sanitize(tt.input)
+			got, err := sanitize(tt.input)
+			if err != nil {
+				t.Fatalf("sanitize(%q) returned unexpected error: %v", tt.input, err)
+			}
 			if got != tt.want {
 				t.Errorf("sanitize(%q) = %q, want %q", tt.input, got, tt.want)
 			}
@@ -1027,7 +1160,10 @@ func TestPipelineOrdering(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := sanitize(tt.input)
+			got, err := sanitize(tt.input)
+			if err != nil {
+				t.Fatalf("sanitize(%q) returned unexpected error: %v", tt.input, err)
+			}
 			if got != tt.want {
 				t.Errorf("sanitize(%q) = %q, want %q", tt.input, got, tt.want)
 			}
@@ -1054,8 +1190,14 @@ func TestIdempotency(t *testing.T) {
 
 	for _, input := range inputs {
 		t.Run(input, func(t *testing.T) {
-			once := sanitize(input)
-			twice := sanitize(once)
+			once, err := sanitize(input)
+			if err != nil {
+				t.Fatalf("sanitize(%q) returned unexpected error: %v", input, err)
+			}
+			twice, err := sanitize(once)
+			if err != nil {
+				t.Fatalf("sanitize(%q) returned unexpected error: %v", once, err)
+			}
 			if once != twice {
 				t.Errorf("not idempotent: sanitize(%q) = %q, sanitize(%q) = %q", input, once, once, twice)
 			}

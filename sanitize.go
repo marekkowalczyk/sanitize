@@ -86,31 +86,117 @@ func trimEnds(input string) string {
 	})
 }
 
-func sanitize(input string) string {
-	return trimEnds(dedupHyp(replaceNonAlphaNum(removeAccents(toLower(removeIllFormed(input))))))
+func sanitize(input string) (string, error) {
+	result := trimEnds(dedupHyp(replaceNonAlphaNum(removeAccents(toLower(removeIllFormed(input))))))
+	if err := validate(result); err != nil {
+		return "", fmt.Errorf("sanitize(%q): postcondition failed: %w", input, err)
+	}
+	return result, nil
+}
+
+// validate checks that a sanitized string contains only allowed characters:
+// lowercase ASCII letters, ASCII digits, and hyphens — with no leading/trailing
+// or consecutive hyphens. Returns nil for empty strings.
+func validate(s string) error {
+	if s == "" {
+		return nil
+	}
+	for i, r := range s {
+		if !(r >= 'a' && r <= 'z') && !(r >= '0' && r <= '9') && r != '-' {
+			return fmt.Errorf("sanitize: output contains disallowed character %q (U+%04X) at position %d", r, r, i)
+		}
+	}
+	if s[0] == '-' {
+		return fmt.Errorf("sanitize: output starts with hyphen: %q", s)
+	}
+	if s[len(s)-1] == '-' {
+		return fmt.Errorf("sanitize: output ends with hyphen: %q", s)
+	}
+	if strings.Contains(s, "--") {
+		return fmt.Errorf("sanitize: output contains consecutive hyphens: %q", s)
+	}
+	return nil
+}
+
+// validateFilename checks that a sanitized filename contains only allowed
+// characters: lowercase ASCII letters, ASCII digits, hyphens, and at most
+// one dot separating the name from the extension. Dotfiles like .gitignore
+// are allowed. Returns nil for empty strings.
+func validateFilename(s string) error {
+	if s == "" {
+		return nil
+	}
+
+	// Dotfile: starts with dot, rest must be a valid sanitized string
+	if s[0] == '.' && !strings.Contains(s[1:], ".") {
+		return validate(s[1:])
+	}
+
+	// Count dots — at most one allowed (name.ext)
+	dotCount := strings.Count(s, ".")
+	if dotCount == 0 {
+		return validate(s)
+	}
+	if dotCount > 1 {
+		return fmt.Errorf("sanitize: filename contains %d dots: %q", dotCount, s)
+	}
+
+	// Exactly one dot — split into name and extension
+	dot := strings.IndexByte(s, '.')
+	name := s[:dot]
+	ext := s[dot+1:]
+
+	if name == "" {
+		return fmt.Errorf("sanitize: filename has empty name before dot: %q", s)
+	}
+	if ext == "" {
+		return fmt.Errorf("sanitize: filename has trailing dot: %q", s)
+	}
+
+	if err := validate(name); err != nil {
+		return fmt.Errorf("sanitize: in filename name part: %w", err)
+	}
+	if err := validate(ext); err != nil {
+		return fmt.Errorf("sanitize: in filename extension part: %w", err)
+	}
+	return nil
 }
 
 // sanitizeFilename sanitizes a filename, treating name and extension separately.
 // Dotfiles (e.g., .gitignore) are preserved as-is if already clean.
-func sanitizeFilename(name string) string {
+func sanitizeFilename(name string) (string, error) {
 	ext := filepath.Ext(name)
 	base := strings.TrimSuffix(name, ext)
 
 	if base == "" {
 		// Dotfile like .gitignore — ext is the whole name
-		return ext
+		result := ext
+		if err := validateFilename(result); err != nil {
+			return "", fmt.Errorf("sanitizeFilename(%q): postcondition failed: %w", name, err)
+		}
+		return result, nil
 	}
 
-	newBase := sanitize(base)
+	newBase, err := sanitize(base)
+	if err != nil {
+		return "", err
+	}
 	if ext == "" {
-		return newBase
+		return newBase, nil
 	}
 
-	newExt := sanitize(ext[1:]) // strip the dot before sanitizing
-	if newExt == "" {
-		return newBase
+	newExt, err := sanitize(ext[1:]) // strip the dot before sanitizing
+	if err != nil {
+		return "", err
 	}
-	return newBase + "." + newExt
+	if newExt == "" {
+		return newBase, nil
+	}
+	result := newBase + "." + newExt
+	if err := validateFilename(result); err != nil {
+		return "", fmt.Errorf("sanitizeFilename(%q): postcondition failed: %w", name, err)
+	}
+	return result, nil
 }
 
 func sameFile(a, b string) bool {
@@ -126,7 +212,11 @@ func sameFile(a, b string) bool {
 func renameOne(path string, dryRun bool, w io.Writer) int {
 	dir := filepath.Dir(path)
 	oldName := filepath.Base(path)
-	newName := sanitizeFilename(oldName)
+	newName, err := sanitizeFilename(oldName)
+	if err != nil {
+		fmt.Fprintf(w, "sanitize: %s: %v\n", path, err)
+		return 1
+	}
 
 	if newName == oldName {
 		return 0
@@ -335,7 +425,11 @@ Examples:
 			if entry == "" {
 				continue
 			}
-			result := sanitize(entry)
+			result, err := sanitize(entry)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "sanitize: %v\n", err)
+				os.Exit(2)
+			}
 			if result == "" {
 				continue
 			}
@@ -349,5 +443,10 @@ Examples:
 	}
 
 	input := strings.Join(flag.Args(), "-")
-	fmt.Println(sanitize(input))
+	result, err := sanitize(input)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "sanitize: %v\n", err)
+		os.Exit(2)
+	}
+	fmt.Println(result)
 }
