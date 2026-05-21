@@ -2,6 +2,15 @@
 
 Feature ideas for future versions.
 
+## Special-case replacements: hardcoded, not configurable (decision)
+
+**Status: decided — keep hardcoded.** The special-case replacements (`ł`, `ß`, `đ`, `ø`, `æ`, `œ`, `ħ`, `ı`) are linguistic facts, not preferences. A config file was considered and rejected:
+
+- The tool's core differentiator is zero-config, opinionated output. A config file would make output depend on external state, breaking reproducibility and composability.
+- The `specialCases` table in `sanitize.go` is visible, self-documenting, and trivial to extend — adding a new entry is one line of code plus a test case.
+- These are bug fixes (characters that slip through NFD), not user preferences.
+- Users who need custom transliteration tables should use detox, which is designed for that.
+
 ## Pre-scan for collisions before renaming (safety)
 
 **Priority: high.** The transformation is lossy, so multiple files can sanitize to the same name (e.g., `Café.txt` and `cafe!.txt` both become `cafe.txt`). The current no-clobber check catches this per-file, but the result is a partial rename -- some files moved, others blocked. With `-r` on a large tree this can leave things in a messy half-state.

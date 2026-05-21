@@ -131,12 +131,18 @@ This is achieved by Unicode NFD decomposition followed by removal of [Mark, Nons
 
 ### Special cases
 
-Some characters are standalone Latin letters that don't decompose into base + combining mark:
+Some characters are standalone Latin letters that don't decompose into base + combining mark. These are handled via a `specialCases` table with direct string replacement:
 
-- `ł`/`Ł` -> `l`/`L` (Polish barred L)
-- `ß` -> `ss` (German eszett)
-
-These are handled with direct string replacement.
+| Character | Replacement | Language |
+|---|---|---|
+| `ł`/`Ł` | `l`/`L` | Polish barred L |
+| `ß` | `ss` | German eszett |
+| `đ`/`Đ` | `d`/`D` | Croatian/Vietnamese barred D |
+| `ø`/`Ø` | `o`/`O` | Danish/Norwegian slashed O |
+| `æ`/`Æ` | `ae`/`AE` | Danish/Norwegian/Icelandic ligature |
+| `œ`/`Œ` | `oe`/`OE` | French ligature |
+| `ħ`/`Ħ` | `h`/`H` | Maltese barred H |
+| `ı` | `i` | Turkish dotless I |
 
 ### Non-Latin scripts
 
@@ -299,7 +305,7 @@ Because the transformation is lossy, multiple files in the same directory can sa
 go test -v
 ```
 
-The test suite includes 250+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, context cancellation, and CLI behavior.
+The test suite includes 260+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, context cancellation, and CLI behavior.
 
 ### Benchmarks
 
@@ -337,7 +343,7 @@ The man page is also included in goreleaser archives.
 
 ### How sanitize differs
 
-**Closest competitor is detox**, which also cleans filenames, transliterates UTF-8, and has recursive + dry-run modes. detox is more configurable (sequence files), but `sanitize` is zero-config, restricts output to Latin script, and handles special cases like Polish `ł`→`l` and German `ß`→`ss` via NFD decomposition + direct replacement.
+**Closest competitor is detox**, which also cleans filenames, transliterates UTF-8, and has recursive + dry-run modes. detox is more configurable (sequence files), but `sanitize` is zero-config, restricts output to Latin script, and handles special cases (Polish `ł`, German `ß`, Danish `ø`/`æ`, French `œ`, Croatian `đ`, Maltese `ħ`, Turkish `ı`) via NFD decomposition + a `specialCases` replacement table.
 
 **rename/prename** is far more powerful but requires writing Perl expressions -- it's a general renamer, not a sanitizer. `sanitize` trades flexibility for zero-config simplicity.
 
@@ -347,7 +353,7 @@ The man page is also included in goreleaser archives.
 
 - **Zero-config opinionated pipeline** -- no regex, config files, or flags needed for the common case
 - **Latin-script-only output** -- unique among these tools; non-Latin characters (Chinese, Cyrillic, Arabic) are stripped
-- **Special-case diacritics** -- standalone characters that don't NFD-decompose (`ł`, `ß`) are handled explicitly
+- **Special-case diacritics** -- standalone characters that don't NFD-decompose (`ł`, `ß`, `đ`, `ø`, `æ`, `œ`, `ħ`, `ı`) are handled via a dedicated replacement table
 - **Single static binary** -- Go, no runtime dependencies, cross-platform
 - **Full CLI integration** -- `-f` file rename, `-r` recursive, `-n` dry run, `-0` null-delimited stdin, `san` symlink, POSIX-compliant flags
 

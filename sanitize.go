@@ -22,10 +22,43 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-var dedupHypRe = regexp.MustCompile("-{2,}")
+// Characters that don't decompose via NFD into base + combining mark.
+// Add new entries here when a Latin-script character is not handled
+// by the standard NFD accent-stripping pipeline.
+var specialCases = []struct{ from, to string }{
+	{"ł", "l"}, {"Ł", "L"}, // Polish barred L
+	{"ß", "ss"},             // German eszett
+	{"đ", "d"}, {"Đ", "D"}, // Croatian/Vietnamese barred D
+	{"ø", "o"}, {"Ø", "O"}, // Danish/Norwegian slashed O
+	{"æ", "ae"}, {"Æ", "AE"}, // Danish/Norwegian/Icelandic ligature
+	{"œ", "oe"}, {"Œ", "OE"}, // French ligature
+	{"ħ", "h"}, {"Ħ", "H"}, // Maltese barred H
+	{"ı", "i"},              // Turkish dotless I (lowercase)
+}
+
+var (
+	dedupHypRe           = regexp.MustCompile("-{2,}")
+	illFormedTransform   = runes.ReplaceIllFormed()
+	nonAlphaNumTransform = runes.Map(func(r rune) rune {
+		if !unicode.Is(unicode.Latin, r) && !unicode.IsDigit(r) {
+			return '-'
+		}
+		return r
+	})
+	accentTransform     = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	specialCaseReplacer = newSpecialCaseReplacer()
+)
+
+func newSpecialCaseReplacer() *strings.Replacer {
+	var pairs []string
+	for _, sc := range specialCases {
+		pairs = append(pairs, sc.from, sc.to)
+	}
+	return strings.NewReplacer(pairs...)
+}
 
 func removeIllFormed(input string) string {
-	s, _, _ := transform.String(runes.ReplaceIllFormed(), input)
+	s, _, _ := transform.String(illFormedTransform, input)
 	return s
 }
 
@@ -34,20 +67,13 @@ func toLower(input string) string {
 }
 
 func replaceNonAlphaNum(input string) string {
-	mapper := runes.Map(func(r rune) rune {
-		if !unicode.Is(unicode.Latin, r) && !unicode.IsDigit(r) {
-			return '-'
-		}
-		return r
-	})
-	s, _, _ := transform.String(mapper, input)
+	s, _, _ := transform.String(nonAlphaNumTransform, input)
 	return s
 }
 
 func removeAccents(input string) string {
-	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-	s, _, _ := transform.String(t, input)
-	return strings.NewReplacer("ł", "l", "Ł", "L", "ß", "ss").Replace(s)
+	s, _, _ := transform.String(accentTransform, input)
+	return specialCaseReplacer.Replace(s)
 }
 
 func dedupHyp(input string) string {

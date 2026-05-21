@@ -736,6 +736,16 @@ func TestRemoveAccents(t *testing.T) {
 		{"digits unchanged", "café123", "cafe123"},
 		{"mixed accented and plain", "hello café world", "hello cafe world"},
 		{"vietnamese tone marks", "Hà Nội", "Ha Noi"},
+		{"danish slashed o lower", "Ørsted", "Orsted"},
+		{"danish slashed o upper", "ØST", "OST"},
+		{"danish ae ligature", "Ærø", "AerO"},
+		{"french oe ligature", "œuvre", "oeuvre"},
+		{"french oe ligature upper", "Œuvre", "OEuvre"},
+		{"croatian barred d lower", "đakovo", "dakovo"},
+		{"croatian barred d upper", "Đakovo", "Dakovo"},
+		{"maltese barred h lower", "ħal", "hal"},
+		{"maltese barred h upper", "Ħal", "Hal"},
+		{"turkish dotless i", "Diyarbakır", "Diyarbakir"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -892,6 +902,12 @@ func TestSanitize(t *testing.T) {
 		{"portuguese", "São Paulo", "sao-paulo"},
 		{"turkish dotless i", "İstanbul", "istanbul"},
 		{"romanian", "României", "romaniei"},
+		{"danish slashed o", "Ørsted", "orsted"},
+		{"danish ae ligature", "Ærø", "aero"},
+		{"french oe ligature", "Œuvre complète", "oeuvre-complete"},
+		{"croatian barred d", "Đakovo", "dakovo"},
+		{"maltese barred h", "Ħal Balzan", "hal-balzan"},
+		{"turkish dotless i lower", "Diyarbakır", "diyarbakir"},
 
 		// Non-Latin scripts (should be stripped entirely)
 		{"chinese", "你好世界", ""},

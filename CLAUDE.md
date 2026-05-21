@@ -10,7 +10,7 @@ A Go CLI tool that sanitizes/normalizes strings for safe use as filenames. It lo
 
 ```bash
 go build .                          # build
-go test -v                          # run full test suite (250+ cases)
+go test -v                          # run full test suite (260+ cases)
 go test -run TestSanitize -v        # run a specific test group
 go test -bench=. -benchmem -run=^$  # run benchmarks
 ./sanitize "input text here"        # sanitize text
@@ -34,7 +34,7 @@ input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> de
 
 Key design decisions:
 - Diacritics are stripped using Unicode NFD decomposition + removal of `unicode.Mn` (Mark, Nonspacing) category runes
-- Polish `ł`/`Ł` and German `ß` are special-cased with direct string replacement because they are standalone characters, not combining sequences
+- Characters that don't NFD-decompose are special-cased in a `specialCases` table: Polish `ł`/`Ł`, German `ß`, Croatian `đ`/`Đ`, Danish/Norwegian `ø`/`Ø`, ligatures `æ`/`Æ` and `œ`/`Œ`, Maltese `ħ`/`Ħ`, Turkish `ı`
 - Both `replaceNonAlphaNum` and `trimEnds` use `unicode.Latin` (not `unicode.Letter`) to restrict output to Latin script characters only
 - Multiple CLI arguments are joined with `-` before processing
 - Version can be set at build time via `-ldflags "-X main.version=1.0.0"`

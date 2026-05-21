@@ -106,11 +106,9 @@ Lowercase the entire string.
 .TP
 .B removeAccents
 NFD decomposition followed by removal of combining marks (Unicode Mn category).
-Polish
-.B \[/l]
-and German
-.B \[ss]
-are special-cased with direct replacement.
+Characters that don't NFD-decompose are special-cased: Polish \[/l]/L,
+German \[ss], Croatian \[d-]/D, Danish/Norwegian \[/o]/O,
+ligatures \[ae]/AE and \[oe]/OE, Maltese h/H, Turkish dotless i.
 .TP
 .B replaceNonAlphaNum
 Replace anything outside

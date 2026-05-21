@@ -17,6 +17,25 @@ Continuous improvement log. Each session ends with a brief review: what went wel
 - For new flags, decide the interaction with existing flags *before* writing tests (sketch the flag matrix)
 - Pre-scan collision detection should be implemented before recommending `-r` for production use on large trees — prioritize this in the next session
 
+## 2026-05-21 — Book-inspired improvements, transformer caching, special cases, repo reorg
+
+**What went well:**
+- Using the book YAMLs as structured inspiration was productive — yielded 4 concrete improvements (io.Writer, signals, benchmarks, distribution) plus 3 backlog items, all grounded in the project's actual needs rather than abstract "we should do X"
+- TDD discipline held throughout: every feature started with a failing test. The user caught one skip early (the `-n` implies `-f` fix) which reinforced the habit
+- Benchmarks immediately paid off: identified `removeAccents` as the bottleneck (37μs, 21 allocs → 25μs, 6 allocs after caching), and the `specialCases` table refactor was informed by the allocation data
+- The special-cases expansion caught a real bug: characters like `ø`, `æ`, `œ` were passing through the pipeline unchanged, producing non-ASCII output despite the tool's promise of filesystem-safe names
+- Deliberation-then-decide pattern worked well for config file question — writing the reasoning to the backlog makes the decision durable and reviewable
+
+**What didn't go well:**
+- The initial `-n` implies `-f` fix was done without TDD — user had to remind me. Should be automatic by now
+- The batch commit (io.Writer + signals + benchmarks + man page + goreleaser) was too large — each feature should have been its own commit for cleaner git history
+- Benchmark numbers were noisy on the dev machine (single-core i5, varying wall-clock times across runs) — allocation counts were the reliable metric but that wasn't stated upfront
+
+**What we'll do differently:**
+- Never skip TDD, even for "obvious" one-line fixes — the test documents the intent, not just the implementation
+- Commit after each logical feature, not in batches — smaller commits are easier to review, revert, and cherry-pick
+- When presenting benchmark results, lead with allocation counts (stable) and note wall-clock times as noisy/indicative only
+
 ## 2026-05-20 — Competitive analysis, refactor renameOne
 
 **What went well:**
