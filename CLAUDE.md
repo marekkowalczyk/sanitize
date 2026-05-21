@@ -10,7 +10,7 @@ A Go CLI tool that sanitizes/normalizes strings for safe use as filenames. It lo
 
 ```bash
 go build .                          # build
-go test -v                          # run full test suite (370+ cases)
+go test -v                          # run full test suite (400+ cases)
 go test -run TestSanitize -v        # run a specific test group
 go test -bench=. -benchmem -run=^$  # run benchmarks
 ./sanitize "input text here"        # sanitize text
@@ -35,7 +35,7 @@ input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> de
 Key design decisions:
 - `sanitize()` and `sanitizeFilename()` return `(string, error)` — a postcondition validation gate (`validate`/`validateFilename`) checks every output before returning. `validate` enforces `[a-z0-9-]` only, no leading/trailing/consecutive hyphens. `validateFilename` additionally allows one dot (name.ext) or dotfile form. If any disallowed character slips through the pipeline, the functions return an error naming the offending character and codepoint. CLI exits with code 2 on postcondition failure (vs 1 for operational errors like collision)
 - Diacritics are stripped using Unicode NFD decomposition + removal of `unicode.Mn` (Mark, Nonspacing) category runes
-- Characters that don't NFD-decompose are special-cased in a `specialCases` table: Polish `ł`/`Ł`, German `ß`, Croatian `đ`/`Đ`, Danish/Norwegian `ø`/`Ø`, ligatures `æ`/`Æ` and `œ`/`Œ`, Maltese `ħ`/`Ħ`, Turkish `ı`
+- Characters that don't NFD-decompose are special-cased in a `specialCases` table (80+ entries) covering Western/Central European (ł, ß, đ, ø, æ, œ, ħ, ı), Icelandic (þ, ð), Sami (ŋ, ŧ), Dutch (ĳ), Catalan (ŀ), African languages (ə, ɛ, ɔ, ɓ, ɗ, ɖ, ƙ, ƒ, ɲ, ʃ, ʒ, etc.), Croatian digraphs (ǆ, ǉ, ǌ), and typographic ligatures (ﬀ, ﬁ, ﬂ, ﬃ, ﬄ). Sources: Unicode CLDR Latin-ASCII, AnyAscii, Unidecode
 - Both `replaceNonAlphaNum` and `trimEnds` use `unicode.Latin` (not `unicode.Letter`) to restrict output to Latin script characters only
 - Multiple CLI arguments are joined with `-` before processing
 - Version can be set at build time via `-ldflags "-X main.version=1.0.0"`

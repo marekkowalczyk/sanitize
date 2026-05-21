@@ -25,15 +25,78 @@ import (
 // Characters that don't decompose via NFD into base + combining mark.
 // Add new entries here when a Latin-script character is not handled
 // by the standard NFD accent-stripping pipeline.
+//
+// Sources: Unicode CLDR Latin-ASCII, AnyAscii, Unidecode.
 var specialCases = []struct{ from, to string }{
-	{"ł", "l"}, {"Ł", "L"}, // Polish barred L
-	{"ß", "ss"},             // German eszett
-	{"đ", "d"}, {"Đ", "D"}, // Croatian/Vietnamese barred D
-	{"ø", "o"}, {"Ø", "O"}, // Danish/Norwegian slashed O
+	// --- Original set (Western/Central European) ---
+	{"ł", "l"}, {"Ł", "L"},   // Polish barred L
+	{"ß", "ss"}, {"ẞ", "SS"}, // German eszett + capital sharp S
+	{"đ", "d"}, {"Đ", "D"},   // Croatian/Vietnamese barred D (U+0111/U+0110)
+	{"ø", "o"}, {"Ø", "O"},   // Danish/Norwegian slashed O
 	{"æ", "ae"}, {"Æ", "AE"}, // Danish/Norwegian/Icelandic ligature
 	{"œ", "oe"}, {"Œ", "OE"}, // French ligature
-	{"ħ", "h"}, {"Ħ", "H"}, // Maltese barred H
-	{"ı", "i"},              // Turkish dotless I (lowercase)
+	{"ħ", "h"}, {"Ħ", "H"},   // Maltese barred H
+	{"ı", "i"},                // Turkish dotless I (lowercase)
+
+	// --- Icelandic/Faroese ---
+	{"þ", "th"}, {"Þ", "Th"}, // Thorn
+	{"ð", "d"}, {"Ð", "D"},   // Eth (U+00F0/U+00D0, distinct from barred D above)
+
+	// --- Sami ---
+	{"ŋ", "ng"}, {"Ŋ", "Ng"}, // Eng
+	{"ŧ", "t"}, {"Ŧ", "T"},   // Barred T
+
+	// --- Dutch ---
+	{"ĳ", "ij"}, {"Ĳ", "IJ"}, // IJ ligature
+
+	// --- Catalan ---
+	{"ŀ", "l"}, {"Ŀ", "L"}, // Middle-dot L (ela geminada)
+
+	// --- Greenlandic ---
+	{"ĸ", "k"}, // Kra (deprecated since 1973)
+
+	// --- Historical/archaic ---
+	{"ſ", "s"},   // Long S
+	{"ŉ", "n"},   // Afrikaans apostrophe-n (deprecated)
+	{"ƕ", "hv"}, {"Ƕ", "Hv"}, // Gothic hwair
+
+	// --- Extended Latin (stroked letters) ---
+	{"ⱥ", "a"}, {"Ⱥ", "A"}, // Stroked A
+
+	// --- African languages ---
+	{"ə", "e"}, {"Ə", "E"},   // Schwa (Azerbaijani, African)
+	{"ɛ", "e"}, {"Ɛ", "E"},   // Open E (Ewe, Akan, Yoruba)
+	{"ɔ", "o"}, {"Ɔ", "O"},   // Open O (Akan, Ewe, Yoruba)
+	{"ɓ", "b"}, {"Ɓ", "B"},   // Hooked B (Hausa, Fula)
+	{"ɗ", "d"}, {"Ɗ", "D"},   // Hooked D (Hausa, Fula)
+	{"ɖ", "d"}, {"Ɖ", "D"},   // African D (Ewe, Dagbani)
+	{"ƙ", "k"}, {"Ƙ", "K"},   // Hooked K (Hausa)
+	{"ƒ", "f"}, {"Ƒ", "F"},   // Hooked F (Ewe)
+	{"ɲ", "n"}, {"Ɲ", "N"},   // Left-hooked N (Bambara, Wolof)
+	{"ɨ", "i"}, {"Ɨ", "I"},   // Barred I
+	{"ʉ", "u"}, {"Ʉ", "U"},   // Barred U
+	{"ʊ", "u"}, {"Ʊ", "U"},   // Upsilon
+	{"ʋ", "v"}, {"Ʋ", "V"},   // Hooked V (Ewe)
+	{"ƴ", "y"}, {"Ƴ", "Y"},   // Hooked Y (Fula)
+	{"ƶ", "z"}, {"Ƶ", "Z"},   // Barred Z (Skolt Sami)
+	{"ʃ", "sh"}, {"Ʃ", "Sh"}, // Esh (Pan-Nigerian)
+	{"ʒ", "zh"}, {"Ʒ", "Zh"}, // Ezh (African, Skolt Sami)
+	{"ǝ", "e"}, {"Ǝ", "E"},   // Turned E (Pan-Nigerian)
+
+	// --- Croatian/DZ digraphs ---
+	{"Ǆ", "DZ"}, {"ǅ", "Dz"}, {"ǆ", "dz"}, // DZ with caron
+	{"Ǉ", "LJ"}, {"ǈ", "Lj"}, {"ǉ", "lj"}, // LJ
+	{"Ǌ", "NJ"}, {"ǋ", "Nj"}, {"ǌ", "nj"}, // NJ
+	{"Ǳ", "DZ"}, {"ǲ", "Dz"}, {"ǳ", "dz"}, // DZ (no caron)
+
+	// --- Typographic ligatures ---
+	{"ﬀ", "ff"}, // ff
+	{"ﬁ", "fi"}, // fi
+	{"ﬂ", "fl"}, // fl
+	{"ﬃ", "ffi"}, // ffi
+	{"ﬄ", "ffl"}, // ffl
+	{"ﬅ", "st"}, // long-s t
+	{"ﬆ", "st"}, // st
 }
 
 var (

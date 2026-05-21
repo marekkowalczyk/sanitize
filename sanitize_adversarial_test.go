@@ -104,29 +104,177 @@ func TestSanitizeAdversarial(t *testing.T) {
 			want:  "i",
 		},
 		{
-			name:    "Boundary: Unhandled Latin script Thorn (þ)",
-			input:   "þor",
-			wantErr: true,
+			name:  "Special-Case: Thorn (þ)",
+			input: "þor",
+			want:  "thor",
 		},
 		{
-			name:    "Boundary: Unhandled Latin script Eth (ð) vs handled Đ",
-			input:   "ðor",
-			wantErr: true,
+			name:  "Special-Case: Thorn uppercase (Þ)",
+			input: "Þór",
+			want:  "thor",
 		},
 		{
-			name:    "Boundary: Unhandled Latin script Kra (ĸ)",
-			input:   "ĸa",
-			wantErr: true,
+			name:  "Special-Case: Eth (ð) vs barred D (Đ)",
+			input: "ðor",
+			want:  "dor",
 		},
 		{
-			name:    "Boundary: Unhandled Latin script Eng (ŋ)",
-			input:   "ŋa",
-			wantErr: true,
+			name:  "Special-Case: Eth uppercase (Ð)",
+			input: "Ðor",
+			want:  "dor",
 		},
 		{
-			name:    "Boundary: Unhandled Latin script long s (ſ)",
-			input:   "ſal",
-			wantErr: true,
+			name:  "Special-Case: Kra (ĸ)",
+			input: "ĸa",
+			want:  "ka",
+		},
+		{
+			name:  "Special-Case: Eng (ŋ)",
+			input: "ŋa",
+			want:  "nga",
+		},
+		{
+			name:  "Special-Case: Eng uppercase (Ŋ)",
+			input: "Ŋa",
+			want:  "nga",
+		},
+		{
+			name:  "Special-Case: Long s (ſ)",
+			input: "ſal",
+			want:  "sal",
+		},
+		{
+			name:  "Special-Case: Capital sharp S (ẞ)",
+			input: "ẞee",
+			want:  "ssee",
+		},
+		{
+			name:  "Special-Case: Afrikaans n-preceded-by-apostrophe (ŉ)",
+			input: "ŉa",
+			want:  "na",
+		},
+		{
+			name:  "Special-Case: Barred T (ŧ)",
+			input: "ŧa",
+			want:  "ta",
+		},
+		{
+			name:  "Special-Case: Barred T uppercase (Ŧ)",
+			input: "Ŧa",
+			want:  "ta",
+		},
+		{
+			name:  "Special-Case: Dutch IJ ligature (ĳ)",
+			input: "ĳsselmeer",
+			want:  "ijsselmeer",
+		},
+		{
+			name:  "Special-Case: Dutch IJ ligature uppercase (Ĳ)",
+			input: "Ĳsselmeer",
+			want:  "ijsselmeer",
+		},
+		{
+			name:  "Special-Case: Catalan middle-dot L (ŀ)",
+			input: "ŀa",
+			want:  "la",
+		},
+		{
+			name:  "Special-Case: Catalan middle-dot L uppercase (Ŀ)",
+			input: "Ŀa",
+			want:  "la",
+		},
+		{
+			name:  "Special-Case: Stroked A (Ⱥ)",
+			input: "Ⱥ",
+			want:  "a",
+		},
+		{
+			name:  "Special-Case: Stroked A lowercase (ⱥ)",
+			input: "ⱥbc",
+			want:  "abc",
+		},
+		// African language special cases
+		{
+			name:  "Special-Case: Schwa (ə)",
+			input: "bəkir",
+			want:  "bekir",
+		},
+		{
+			name:  "Special-Case: Open E (ɛ)",
+			input: "ɛwe",
+			want:  "ewe",
+		},
+		{
+			name:  "Special-Case: Open O (ɔ)",
+			input: "ɔman",
+			want:  "oman",
+		},
+		{
+			name:  "Special-Case: Hooked B (ɓ)",
+			input: "ɓa",
+			want:  "ba",
+		},
+		{
+			name:  "Special-Case: Hooked D (ɗ)",
+			input: "ɗa",
+			want:  "da",
+		},
+		{
+			name:  "Special-Case: African D (ɖ)",
+			input: "ɖa",
+			want:  "da",
+		},
+		{
+			name:  "Special-Case: Hooked K (ƙ)",
+			input: "ƙa",
+			want:  "ka",
+		},
+		{
+			name:  "Special-Case: Hooked F (ƒ)",
+			input: "ƒa",
+			want:  "fa",
+		},
+		// Typographic ligatures
+		{
+			name:  "Special-Case: Ligature ff (ﬀ)",
+			input: "oﬀice",
+			want:  "office",
+		},
+		{
+			name:  "Special-Case: Ligature fi (ﬁ)",
+			input: "ﬁle",
+			want:  "file",
+		},
+		{
+			name:  "Special-Case: Ligature fl (ﬂ)",
+			input: "ﬂoor",
+			want:  "floor",
+		},
+		{
+			name:  "Special-Case: Ligature ffi (ﬃ)",
+			input: "oﬃce",
+			want:  "office",
+		},
+		{
+			name:  "Special-Case: Ligature ffl (ﬄ)",
+			input: "raﬄe",
+			want:  "raffle",
+		},
+		// Croatian digraphs
+		{
+			name:  "Special-Case: Croatian DZ digraph (ǆ)",
+			input: "ǆa",
+			want:  "dza",
+		},
+		{
+			name:  "Special-Case: Croatian LJ digraph (ǉ)",
+			input: "ǉa",
+			want:  "lja",
+		},
+		{
+			name:  "Special-Case: Croatian NJ digraph (ǌ)",
+			input: "ǌa",
+			want:  "nja",
 		},
 
 		// ====================================================================
@@ -136,11 +284,6 @@ func TestSanitizeAdversarial(t *testing.T) {
 			name:  "Go Quirks: Turkish Dotted I (İ) standard ToLower expansion",
 			input: "İSTANBUL",
 			want:  "istanbul",
-		},
-		{
-			name:    "Go Quirks: Latin character with byte-length expansion (Ⱥ)",
-			input:   "Ⱥ",
-			wantErr: true,
 		},
 
 		// ====================================================================
@@ -346,14 +489,14 @@ func TestSanitizeFilenameAdversarial(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "Filename: Unhandled Latin character in extension",
-			input:   "file.þxt",
-			wantErr: true,
+			name:  "Filename: Thorn in extension",
+			input: "file.þxt",
+			want:  "file.thxt",
 		},
 		{
-			name:    "Filename: Unhandled Latin character in base",
-			input:   "þor.txt",
-			wantErr: true,
+			name:  "Filename: Thorn in base",
+			input: "þor.txt",
+			want:  "thor.txt",
 		},
 
 		// ====================================================================

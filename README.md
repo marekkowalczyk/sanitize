@@ -134,18 +134,37 @@ This is achieved by Unicode NFD decomposition followed by removal of [Mark, Nons
 
 ### Special cases
 
-Some characters are standalone Latin letters that don't decompose into base + combining mark. These are handled via a `specialCases` table with direct string replacement:
+Some characters are standalone Latin letters that don't decompose into base + combining mark. These are handled via a `specialCases` table (80+ entries, sourced from Unicode CLDR Latin-ASCII, AnyAscii, and Unidecode) with direct string replacement:
 
-| Character | Replacement | Language |
+| Character | Replacement | Language/Use |
 |---|---|---|
 | `ł`/`Ł` | `l`/`L` | Polish barred L |
-| `ß` | `ss` | German eszett |
+| `ß`/`ẞ` | `ss`/`SS` | German eszett + capital sharp S |
 | `đ`/`Đ` | `d`/`D` | Croatian/Vietnamese barred D |
 | `ø`/`Ø` | `o`/`O` | Danish/Norwegian slashed O |
 | `æ`/`Æ` | `ae`/`AE` | Danish/Norwegian/Icelandic ligature |
 | `œ`/`Œ` | `oe`/`OE` | French ligature |
 | `ħ`/`Ħ` | `h`/`H` | Maltese barred H |
 | `ı` | `i` | Turkish dotless I |
+| `þ`/`Þ` | `th`/`Th` | Icelandic thorn |
+| `ð`/`Ð` | `d`/`D` | Icelandic/Faroese eth |
+| `ŋ`/`Ŋ` | `ng`/`Ng` | Sami/African eng |
+| `ŧ`/`Ŧ` | `t`/`T` | Sami barred T |
+| `ĳ`/`Ĳ` | `ij`/`IJ` | Dutch IJ ligature |
+| `ŀ`/`Ŀ` | `l`/`L` | Catalan middle-dot L |
+| `ĸ` | `k` | Greenlandic kra |
+| `ſ` | `s` | Historical long S |
+| `ə`/`Ə` | `e`/`E` | Azerbaijani/African schwa |
+| `ɛ`/`Ɛ` | `e`/`E` | African open E (Ewe, Akan) |
+| `ɔ`/`Ɔ` | `o`/`O` | African open O (Akan, Ewe) |
+| `ɓ`/`Ɓ` | `b`/`B` | African hooked B (Hausa, Fula) |
+| `ɗ`/`Ɗ` | `d`/`D` | African hooked D (Hausa, Fula) |
+| `ƙ`/`Ƙ` | `k`/`K` | African hooked K (Hausa) |
+| `ʃ`/`Ʃ` | `sh`/`Sh` | African esh (Pan-Nigerian) |
+| `ʒ`/`Ʒ` | `zh`/`Zh` | African ezh (Skolt Sami) |
+| `ǆ`/`ǉ`/`ǌ` | `dz`/`lj`/`nj` | Croatian digraphs |
+| `ﬀ`/`ﬁ`/`ﬂ`/`ﬃ`/`ﬄ` | `ff`/`fi`/`fl`/`ffi`/`ffl` | Typographic ligatures |
+| ... | ... | + 20 more African/historical entries |
 
 ### Non-Latin scripts
 
@@ -308,7 +327,7 @@ Because the transformation is lossy, multiple files in the same directory can sa
 go test -v
 ```
 
-The test suite includes 370+ cases covering individual pipeline stages, postcondition validation, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, context cancellation, CLI behavior, and an adversarial suite (`sanitize_adversarial_test.go`) with LLM-generated edge cases targeting Unicode normalization gotchas, unhandled Latin script boundaries, Go case-folding quirks, path traversal, accidental dotfile creation, and malicious payloads (null bytes, control characters, PUA codepoints, Cyrillic homoglyphs).
+The test suite includes 400+ cases covering individual pipeline stages, postcondition validation, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, context cancellation, CLI behavior, and an adversarial suite (`sanitize_adversarial_test.go`) with LLM-generated edge cases targeting Unicode normalization gotchas, unhandled Latin script boundaries, Go case-folding quirks, path traversal, accidental dotfile creation, and malicious payloads (null bytes, control characters, PUA codepoints, Cyrillic homoglyphs).
 
 ### Benchmarks
 
@@ -356,7 +375,7 @@ The man page is also included in goreleaser archives.
 
 - **Zero-config opinionated pipeline** -- no regex, config files, or flags needed for the common case
 - **Latin-script-only output** -- unique among these tools; non-Latin characters (Chinese, Cyrillic, Arabic) are stripped
-- **Special-case diacritics** -- standalone characters that don't NFD-decompose (`ł`, `ß`, `đ`, `ø`, `æ`, `œ`, `ħ`, `ı`) are handled via a dedicated replacement table
+- **Special-case diacritics** -- 80+ standalone Latin characters that don't NFD-decompose are handled via a dedicated replacement table covering Western/Central European, Icelandic, Sami, Dutch, African languages, Croatian digraphs, and typographic ligatures
 - **Single static binary** -- Go, no runtime dependencies, cross-platform
 - **Full CLI integration** -- `-f` file rename, `-r` recursive, `-n` dry run, `-0` null-delimited stdin, `san` symlink, POSIX-compliant flags
 
