@@ -26,6 +26,10 @@ Allow a character other than `-` as the replacement separator. For example, `_` 
 
 Write a manifest of old→new renames (e.g., `.sanitize-manifest.json`) so a batch rename can be reversed. Useful for `-r` on large directory trees where mistakes are costly.
 
+## Homebrew tap
+
+**Priority: medium.** Create a personal Homebrew tap (`homebrew-sanitize` repo on GitHub) so users can `brew tap marekkowalczyk/sanitize && brew install sanitize`. Goreleaser can auto-generate and push the Formula on each release — it's ~10 lines of config in `.goreleaser.yml` plus an empty GitHub repo. Natural next step given goreleaser is already set up. Submitting to homebrew-core (the official tap) is premature — requires meaningful adoption/stars and goes through their review process. MacPorts requires manually submitting a Portfile to their ports tree, has a smaller audience than Homebrew, and has no goreleaser integration — not worth the effort unless someone asks.
+
 ## Makefile for dev workflow
 
 **Priority: low.** Encode common commands (`build`, `test`, `bench`, `install`, `lint`, `release-dry-run`) in a Makefile. The main value is encoding `GOTOOLCHAIN=local` and long commands like the bench invocation so they don't need to be remembered. However, Go's built-in tools already cover most of what Make would do — `go build`, `go test`, `go install`, `go clean` all work out of the box, and goreleaser handles releases via CI. The Makefile is really just a shortcut file for 3-4 long commands. If the `GOTOOLCHAIN=local` requirement goes away (macOS upgrade), the value drops further. Inspired by Chapter 9 of *Small, Sharp Software Tools*.
