@@ -10,7 +10,7 @@ A Go CLI tool that sanitizes/normalizes strings for safe use as filenames. It lo
 
 ```bash
 go build .                          # build
-go test -v                          # run full test suite (260+ cases)
+go test -v                          # run full test suite (300+ cases)
 go test -run TestSanitize -v        # run a specific test group
 go test -bench=. -benchmem -run=^$  # run benchmarks
 ./sanitize "input text here"        # sanitize text
@@ -29,10 +29,11 @@ Dependencies are managed via Go modules (`go.mod`). External dependencies are `g
 Single-file Go program (`sanitize.go`) with a transformation pipeline composed via function nesting:
 
 ```
-input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> dedupHyp -> trimEnds -> output
+input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> dedupHyp -> trimEnds -> validate -> output
 ```
 
 Key design decisions:
+- `sanitize()` and `sanitizeFilename()` return `(string, error)` — a postcondition validation gate (`validate`/`validateFilename`) checks every output before returning. `validate` enforces `[a-z0-9-]` only, no leading/trailing/consecutive hyphens. `validateFilename` additionally allows one dot (name.ext) or dotfile form. If any disallowed character slips through the pipeline, the functions return an error naming the offending character and codepoint. CLI exits with code 2 on postcondition failure (vs 1 for operational errors like collision)
 - Diacritics are stripped using Unicode NFD decomposition + removal of `unicode.Mn` (Mark, Nonspacing) category runes
 - Characters that don't NFD-decompose are special-cased in a `specialCases` table: Polish `ł`/`Ł`, German `ß`, Croatian `đ`/`Đ`, Danish/Norwegian `ø`/`Ø`, ligatures `æ`/`Æ` and `œ`/`Œ`, Maltese `ħ`/`Ħ`, Turkish `ı`
 - Both `replaceNonAlphaNum` and `trimEnds` use `unicode.Latin` (not `unicode.Letter`) to restrict output to Latin script characters only
@@ -55,8 +56,9 @@ Key design decisions:
 
 Tests are in `sanitize_test.go` and cover:
 - Unit tests for each pipeline stage
+- Unit tests for `validate`/`validateFilename` postcondition checks
 - Unit tests for `renameOne`/`renameFiles`/`renameRecursive` (using `io.Writer` for output capture)
-- Integration tests for the full `sanitize()` function
+- Integration tests for the full `sanitize()` function (including error returns)
 - Pipeline ordering verification
 - Idempotency tests
 - Context cancellation (graceful interrupt)
