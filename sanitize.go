@@ -165,11 +165,20 @@ func validateFilename(s string) error {
 // sanitizeFilename sanitizes a filename, treating name and extension separately.
 // Returns an error if the result would be empty (no usable characters in input).
 func sanitizeFilename(name string) (string, error) {
+	if name == "" {
+		return "", fmt.Errorf("sanitizeFilename: empty input")
+	}
+
 	ext := filepath.Ext(name)
 	base := strings.TrimSuffix(name, ext)
 
-	if base == "" {
-		// Dotfile like .gitignore — sanitize the part after the dot
+	// Treat dot-only bases (e.g., "." from "..hidden") as empty — the
+	// meaningful content is in ext, so handle it as a dotfile.
+	if strings.TrimLeft(base, ".") == "" {
+		// Dotfile like .gitignore, or leading-dot names like ..hidden
+		if ext == "" || len(ext) < 2 {
+			return "", fmt.Errorf("sanitizeFilename(%q): empty result", name)
+		}
 		newDotBase, err := sanitize(ext[1:])
 		if err != nil {
 			return "", err
