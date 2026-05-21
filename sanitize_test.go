@@ -303,6 +303,30 @@ func TestCLIDryRunCombinedFlags(t *testing.T) {
 	}
 }
 
+func TestCLIDryRunImpliesFileMode(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	src := filepath.Join(dir, "Hello World.txt")
+	os.WriteFile(src, []byte("test"), 0644)
+
+	// -n without -f should still enter file mode (dry-run only makes sense for renames)
+	cmd := exec.Command(binary, "-n", src)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("-n without -f failed: %v\noutput: %s", err, out)
+	}
+
+	// Source should still exist (dry run)
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		t.Error("source file should still exist with -n")
+	}
+
+	if !strings.Contains(string(out), "hello-world.txt") {
+		t.Errorf("-n should imply file mode and show target, got: %q", string(out))
+	}
+}
+
 // --- File rename mode (-f) CLI tests ---
 
 func TestCLIFileRename(t *testing.T) {

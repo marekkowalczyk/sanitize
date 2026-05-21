@@ -232,7 +232,7 @@ Examples:
 		return
 	}
 
-	isFileMode := *fileMode || *recursive || invokedAsSan()
+	isFileMode := *fileMode || *recursive || *dryRun || invokedAsSan()
 
 	if isFileMode {
 		if flag.NArg() == 0 {
