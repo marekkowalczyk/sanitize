@@ -1008,6 +1008,61 @@ func TestSanitizeFilenameReturnsError(t *testing.T) {
 	}
 }
 
+// --- Edge cases: empty filenames, dotfile sanitization, non-Latin-only names ---
+
+func TestSanitizeFilenameEmptyResult(t *testing.T) {
+	// All-non-Latin filenames sanitize to empty — must be an error, not an empty string
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{"chinese no ext", "你好"},
+		{"chinese with chinese ext", "你好.你好"},
+		{"only punctuation", "!!!.@@@"},
+		{"only emoji", "😀"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := sanitizeFilename(tt.input)
+			if err == nil {
+				t.Errorf("sanitizeFilename(%q) = %q, want error for empty/unsafe result", tt.input, result)
+			}
+		})
+	}
+}
+
+func TestSanitizeFilenameNonLatinWithLatinExt(t *testing.T) {
+	// Non-Latin base with Latin extension must not silently become a dotfile
+	result, err := sanitizeFilename("你好.txt")
+	if err == nil {
+		t.Errorf("sanitizeFilename(\"你好.txt\") = %q, want error (empty base would create dotfile)", result)
+	}
+}
+
+func TestSanitizeFilenameDotfileSanitized(t *testing.T) {
+	// Uppercase dotfiles must be sanitized, not rejected or passed through raw
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"uppercase dotfile", ".GITIGNORE", ".gitignore"},
+		{"mixed case dotfile", ".Dockerfile", ".dockerfile"},
+		{"accented dotfile", ".café", ".cafe"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := sanitizeFilename(tt.input)
+			if err != nil {
+				t.Fatalf("sanitizeFilename(%q) returned error: %v", tt.input, err)
+			}
+			if got != tt.want {
+				t.Errorf("sanitizeFilename(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestSanitize(t *testing.T) {
 	tests := []struct {
 		name  string

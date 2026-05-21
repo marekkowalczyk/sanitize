@@ -163,14 +163,21 @@ func validateFilename(s string) error {
 }
 
 // sanitizeFilename sanitizes a filename, treating name and extension separately.
-// Dotfiles (e.g., .gitignore) are preserved as-is if already clean.
+// Returns an error if the result would be empty (no usable characters in input).
 func sanitizeFilename(name string) (string, error) {
 	ext := filepath.Ext(name)
 	base := strings.TrimSuffix(name, ext)
 
 	if base == "" {
-		// Dotfile like .gitignore — ext is the whole name
-		result := ext
+		// Dotfile like .gitignore — sanitize the part after the dot
+		newDotBase, err := sanitize(ext[1:])
+		if err != nil {
+			return "", err
+		}
+		if newDotBase == "" {
+			return "", fmt.Errorf("sanitizeFilename(%q): empty result", name)
+		}
+		result := "." + newDotBase
 		if err := validateFilename(result); err != nil {
 			return "", fmt.Errorf("sanitizeFilename(%q): postcondition failed: %w", name, err)
 		}
@@ -182,12 +189,23 @@ func sanitizeFilename(name string) (string, error) {
 		return "", err
 	}
 	if ext == "" {
+		if newBase == "" {
+			return "", fmt.Errorf("sanitizeFilename(%q): empty result", name)
+		}
 		return newBase, nil
 	}
 
 	newExt, err := sanitize(ext[1:]) // strip the dot before sanitizing
 	if err != nil {
 		return "", err
+	}
+
+	if newBase == "" && newExt == "" {
+		return "", fmt.Errorf("sanitizeFilename(%q): empty result", name)
+	}
+	if newBase == "" {
+		// Non-Latin base with Latin ext — refuse rather than create a dotfile
+		return "", fmt.Errorf("sanitizeFilename(%q): base sanitizes to empty, refusing to create dotfile", name)
 	}
 	if newExt == "" {
 		return newBase, nil
