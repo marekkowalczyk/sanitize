@@ -4,7 +4,7 @@ Feature ideas for future versions.
 
 ## Special-case replacements: hardcoded, not configurable (decision)
 
-**Status: decided — keep hardcoded.** The special-case replacements (`ł`, `ß`, `đ`, `ø`, `æ`, `œ`, `ħ`, `ı`) are linguistic facts, not preferences. A config file was considered and rejected:
+**Status: decided — keep hardcoded.** The special-case replacements (80+ entries as of 2026-05-21, covering Western/Central European, Icelandic, Sami, Dutch, African languages, Croatian digraphs, and typographic ligatures — sourced from Unicode CLDR Latin-ASCII, AnyAscii, and Unidecode) are linguistic facts, not preferences. A config file was considered and rejected:
 
 - The tool's core differentiator is zero-config, opinionated output. A config file would make output depend on external state, breaking reproducibility and composability.
 - The `specialCases` table in `sanitize.go` is visible, self-documenting, and trivial to extend — adding a new entry is one line of code plus a test case.
@@ -37,7 +37,7 @@ Write a manifest of old→new renames (e.g., `.sanitize-manifest.json`) so a bat
 
 ## Automatic `san` symlink on install
 
-Currently `go install` only creates the `sanitize` binary. Users must manually `ln -s` to get `san`. Options considered:
+Currently `go install` only creates the `sanitize` binary. Users must manually `ln -s` to get `san`. (Author migrated from old san.sh to symlink on 2026-05-21.) Options considered:
 
 - **Homebrew formula** — the natural place. A formula can create the symlink as a post-install step. This is the strongest argument for implementing the Homebrew tap (see below).
 - **Makefile `install` target** — `go install && ln -sf $(go env GOPATH)/bin/sanitize /usr/local/bin/san`. Works but requires `make install` instead of `go install`.

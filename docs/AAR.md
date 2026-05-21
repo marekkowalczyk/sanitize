@@ -36,6 +36,25 @@ Continuous improvement log. Each session ends with a brief review: what went wel
 - Commit after each logical feature, not in batches — smaller commits are easier to review, revert, and cherry-pick
 - When presenting benchmark results, lead with allocation counts (stable) and note wall-clock times as noisy/indicative only
 
+## 2026-05-21 — Postcondition validation, adversarial testing, 80+ special cases
+
+**What went well:**
+- The "nuclear power plant" framing drove genuinely rigorous design — postcondition validation, defense-in-depth, diagnostic error messages with codepoints
+- TDD discipline was maintained throughout: every feature started with failing tests, including the validation functions, error signatures, and edge cases
+- Using a second LLM as adversarial tester was highly effective — it found a panic on empty input and a dotfile edge case that we missed, plus identified 5 unhandled Latin characters
+- The three-phase approach (validation → adversarial → expand table) kept each commit focused and reviewable
+- Triage of adversarial results was careful: 2 real bugs fixed, 3 wrong expectations corrected with reasoning documented in test comments
+
+**What didn't go well:**
+- The `sanitizeFilename("")` panic should have been caught when adding the empty-result validation — we tested empty sanitize output but didn't test empty input to sanitizeFilename
+- The `"..hidden"` edge case (dot-only base) was missed until the adversarial LLM found it — `filepath.Ext` behavior on dot-prefixed names deserves more attention
+- The adversarial test file initially replaced the entire test suite (wrong package, placeholder bodies) — required recovery from git and manual integration
+
+**What we'll do differently:**
+- When adding error handling to a function, systematically test the zero-value/empty input as a first case — it's the most common crash vector
+- When accepting LLM-generated test code, always create it as a separate file rather than replacing existing tests — review before integrating
+- For `filepath.Ext` edge cases, build a small truth table of inputs (empty, dots-only, leading dots, multiple dots) before coding
+
 ## 2026-05-20 — Competitive analysis, refactor renameOne
 
 **What went well:**
