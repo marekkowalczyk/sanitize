@@ -203,7 +203,7 @@ lines from stdin (one input per line, one output per line).
 Flags:
   -f, --file        rename files instead of sanitizing text
   -r, --recursive   recursively rename files in directories
-  -n, --dry-run     show what would be renamed without renaming
+  -n, --dry-run     show what would be renamed without renaming (implies -f)
   -0, --null        use null byte as delimiter (for stdin mode)
       --version     print version and exit
   -h, --help        print this help
