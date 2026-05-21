@@ -31,6 +31,9 @@ It lowercases, strips diacritics, replaces non-alphanumeric characters
 with hyphens, deduplicates consecutive hyphens, and trims
 leading/trailing non-alphanumeric characters.
 Output is restricted to Latin-script characters, digits, and hyphens.
+Every output is validated against a strict postcondition before being
+returned; if any disallowed character slips through the pipeline, the
+tool fails with a diagnostic error rather than producing an unsafe result.
 .PP
 Multiple arguments are joined with hyphens before processing.
 With no arguments and piped input,
@@ -88,13 +91,14 @@ Success.
 Runtime error (rename failed, target already exists, interrupted).
 .TP
 .B 2
-Usage error (unknown flag, missing arguments).
+Usage error or postcondition failure (unknown flag, missing arguments,
+disallowed character in output).
 .SH TRANSFORMATION PIPELINE
 Input is processed through the following stages in order:
 .PP
 .RS 4
 .nf
-removeIllFormed \(-> toLower \(-> removeAccents \(-> replaceNonAlphaNum \(-> dedupHyp \(-> trimEnds
+removeIllFormed \(-> toLower \(-> removeAccents \(-> replaceNonAlphaNum \(-> dedupHyp \(-> trimEnds \(-> validate
 .fi
 .RE
 .TP
@@ -120,6 +124,12 @@ Collapse runs of consecutive hyphens into a single hyphen.
 .TP
 .B trimEnds
 Strip leading/trailing non-Latin, non-digit characters.
+.TP
+.B validate
+Postcondition check: verify the output contains only [a\-z0\-9\-],
+with no leading, trailing, or consecutive hyphens.
+Returns an error identifying the offending character and its Unicode
+codepoint if any disallowed character is present.
 .SH EXAMPLES
 Sanitize text:
 .PP

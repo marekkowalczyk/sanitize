@@ -6,6 +6,8 @@ Inspired by the principles in Brian P. Hogan's *Small, Sharp Software Tools*, `s
 
 It lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims leading/trailing non-alphanumeric characters. Output is restricted to Latin-script characters, digits, and hyphens.
 
+Designed for mission-critical use: every output is validated against a strict postcondition (`[a-z0-9-]` for strings, `[a-z0-9.-]` for filenames) before being returned. If the pipeline produces any disallowed character, the tool fails with a diagnostic error rather than silently passing through an unsafe result.
+
 ## Installation
 
 ### Pre-built binaries
@@ -109,7 +111,7 @@ Short flags can be combined: `-fn` is the same as `-f -n`. Long forms are also a
 ## Transformation pipeline
 
 ```
-input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> dedupHyp -> trimEnds -> output
+input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> dedupHyp -> trimEnds -> validate -> output
 ```
 
 1. **removeIllFormed** -- replace ill-formed UTF-8 sequences
@@ -118,6 +120,7 @@ input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> de
 4. **replaceNonAlphaNum** -- replace anything outside `unicode.Latin` and digits with `-`
 5. **dedupHyp** -- collapse runs of `--` into a single `-`
 6. **trimEnds** -- strip leading/trailing non-Latin, non-digit characters
+7. **validate** -- postcondition check: verify output contains only `[a-z0-9-]`, no leading/trailing or consecutive hyphens. Returns an error if any disallowed character is present (names the offending character and its Unicode codepoint)
 
 ## Handling of non-ASCII characters
 
@@ -273,7 +276,7 @@ Exit codes:
 |---|---|
 | 0 | Success |
 | 1 | Runtime error (rename failed, target exists, etc.) |
-| 2 | Usage error (unknown flag, missing arguments) |
+| 2 | Usage error or postcondition failure (unknown flag, missing arguments, disallowed character in output) |
 
 ### The `-f` concession
 
@@ -305,7 +308,7 @@ Because the transformation is lossy, multiple files in the same directory can sa
 go test -v
 ```
 
-The test suite includes 260+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, context cancellation, and CLI behavior.
+The test suite includes 370+ cases covering individual pipeline stages, postcondition validation, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, context cancellation, CLI behavior, and an adversarial suite (`sanitize_adversarial_test.go`) with LLM-generated edge cases targeting Unicode normalization gotchas, unhandled Latin script boundaries, Go case-folding quirks, path traversal, accidental dotfile creation, and malicious payloads (null bytes, control characters, PUA codepoints, Cyrillic homoglyphs).
 
 ### Benchmarks
 

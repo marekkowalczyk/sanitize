@@ -10,7 +10,7 @@ A Go CLI tool that sanitizes/normalizes strings for safe use as filenames. It lo
 
 ```bash
 go build .                          # build
-go test -v                          # run full test suite (300+ cases)
+go test -v                          # run full test suite (370+ cases)
 go test -run TestSanitize -v        # run a specific test group
 go test -bench=. -benchmem -run=^$  # run benchmarks
 ./sanitize "input text here"        # sanitize text
@@ -63,6 +63,7 @@ Tests are in `sanitize_test.go` and cover:
 - Idempotency tests
 - Context cancellation (graceful interrupt)
 - CLI integration tests (stdin, args, exit codes, `-f` mode, `-r` recursive, `san` symlink, `-0` null mode, `-n` dry run, `--version`)
+- Adversarial tests (`sanitize_adversarial_test.go`): LLM-generated edge cases covering Unicode normalization, unhandled Latin scripts, Go case-folding quirks, path traversal, dotfile creation, and malicious payloads
 - Benchmarks for each pipeline stage and full `sanitize()`/`sanitizeFilename()`
 
 ## Supporting Files
