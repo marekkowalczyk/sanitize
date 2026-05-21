@@ -25,3 +25,15 @@ Allow a character other than `-` as the replacement separator. For example, `_` 
 ## Undo / backup manifest
 
 Write a manifest of old→new renames (e.g., `.sanitize-manifest.json`) so a batch rename can be reversed. Useful for `-r` on large directory trees where mistakes are costly.
+
+## Makefile for dev workflow
+
+Encode common commands (`build`, `test`, `bench`, `install`, `lint`, `release-dry-run`) in a Makefile. The `GOTOOLCHAIN=local` requirement on macOS 10.14 makes this especially useful — developers wouldn't need to remember the env var. Inspired by Chapter 9 of *Small, Sharp Software Tools*.
+
+## Richer pipeline examples in README
+
+Show `sanitize` composed with other Unix tools in realistic workflows: `find -print0 | sanitize -0 | xargs -0`, using `tee` to log original names, combining with `sort`/`uniq` to detect would-be collisions before renaming. Inspired by Chapter 5 of *Small, Sharp Software Tools*.
+
+## Shell completions (bash/zsh)
+
+Hand-written completion scripts for bash and zsh. Only 5 flags so it's simple, but improves discoverability. Could be installed manually or shipped with goreleaser. Inspired by Chapter 6 of *Small, Sharp Software Tools*.

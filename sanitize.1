@@ -1,0 +1,223 @@
+.TH SANITIZE 1 "2026-05-21" "sanitize" "User Commands"
+.SH NAME
+sanitize \- sanitize strings for safe use as filenames
+.SH SYNOPSIS
+.B sanitize
+.RI [ flags ]
+.IR text ...
+.br
+.B sanitize
+.B \-f
+.RB [ \-n ]
+.IR file ...
+.br
+.B sanitize
+.B \-r
+.RB [ \-n ]
+.IR dir ...
+.br
+.B san
+.RB [ \-rn ]
+.IR file | dir ...
+.br
+.I command
+.B |
+.B sanitize
+.RB [ \-0 ]
+.SH DESCRIPTION
+.B sanitize
+transforms input strings into clean, filesystem-safe names.
+It lowercases, strips diacritics, replaces non-alphanumeric characters
+with hyphens, deduplicates consecutive hyphens, and trims
+leading/trailing non-alphanumeric characters.
+Output is restricted to Latin-script characters, digits, and hyphens.
+.PP
+Multiple arguments are joined with hyphens before processing.
+With no arguments and piped input,
+.B sanitize
+reads one line at a time from stdin and writes one sanitized line per line.
+Blank lines and lines that sanitize to empty are skipped.
+.SH OPTIONS
+.TP
+.BR \-f ", " \-\-file
+Rename files instead of sanitizing text.
+The filename is split from its extension; each part is sanitized separately.
+Will not overwrite existing files.
+.TP
+.BR \-r ", " \-\-recursive
+Recursively rename files and directories in the given directory tree.
+Entries are processed depth-first (deepest first) so that renaming
+a child does not invalidate a parent path.
+Implies
+.BR \-f .
+Handles SIGINT gracefully, stopping between renames.
+.TP
+.BR \-n ", " \-\-dry\-run
+Show what would be renamed without actually renaming.
+Implies
+.BR \-f .
+.TP
+.BR \-0 ", " \-\-null
+Use null bytes instead of newlines as input/output delimiters.
+For use with
+.BR find (1)
+.B \-print0
+and
+.BR xargs (1)
+.BR \-0 .
+.TP
+.B \-\-version
+Print version and exit.
+.TP
+.BR \-h ", " \-\-help
+Print usage summary and exit.
+.PP
+Short flags can be combined:
+.B \-fn
+is equivalent to
+.BR "\-f \-n" .
+Use
+.B \-\-
+to separate flags from arguments starting with a hyphen.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Runtime error (rename failed, target already exists, interrupted).
+.TP
+.B 2
+Usage error (unknown flag, missing arguments).
+.SH TRANSFORMATION PIPELINE
+Input is processed through the following stages in order:
+.PP
+.RS 4
+.nf
+removeIllFormed \(-> toLower \(-> removeAccents \(-> replaceNonAlphaNum \(-> dedupHyp \(-> trimEnds
+.fi
+.RE
+.TP
+.B removeIllFormed
+Replace ill-formed UTF-8 sequences with U+FFFD.
+.TP
+.B toLower
+Lowercase the entire string.
+.TP
+.B removeAccents
+NFD decomposition followed by removal of combining marks (Unicode Mn category).
+Polish
+.B \[/l]
+and German
+.B \[ss]
+are special-cased with direct replacement.
+.TP
+.B replaceNonAlphaNum
+Replace anything outside
+.I unicode.Latin
+and digits with a hyphen.
+.TP
+.B dedupHyp
+Collapse runs of consecutive hyphens into a single hyphen.
+.TP
+.B trimEnds
+Strip leading/trailing non-Latin, non-digit characters.
+.SH EXAMPLES
+Sanitize text:
+.PP
+.RS 4
+.nf
+$ sanitize "Hello, World!"
+hello-world
+
+$ sanitize "Zażółć gęślą jaźń"
+zazolc-gesla-jazn
+
+$ sanitize foo bar baz
+foo-bar-baz
+.fi
+.RE
+.PP
+Read from stdin:
+.PP
+.RS 4
+.nf
+$ echo "Café Résumé" | sanitize
+cafe-resume
+.fi
+.RE
+.PP
+Null-delimited I/O:
+.PP
+.RS 4
+.nf
+$ find . \-print0 | sanitize \-0 | xargs \-0 echo
+.fi
+.RE
+.PP
+Rename files:
+.PP
+.RS 4
+.nf
+$ sanitize \-f "My Document.PDF"
+My Document.PDF \(-> my-document.pdf
+
+$ sanitize \-fn *.txt
+Report (Final).txt \(-> report-final.txt
+.fi
+.RE
+.PP
+Recursive rename with dry run:
+.PP
+.RS 4
+.nf
+$ sanitize \-rn ~/Downloads/
+.fi
+.RE
+.PP
+Via san symlink:
+.PP
+.RS 4
+.nf
+$ san "My File.txt"
+My File.txt \(-> my-file.txt
+.fi
+.RE
+.SH SAN SYMLINK
+When the binary is invoked as
+.BR san ,
+file rename mode is enabled automatically without needing
+.BR \-f .
+To set up:
+.PP
+.RS 4
+.nf
+ln \-s $(which sanitize) /usr/local/bin/san
+.fi
+.RE
+.SH CAVEATS
+The transformation is lossy.
+Different input strings can produce identical output.
+In file rename mode, this means multiple files in the same directory can
+collide (e.g.,
+.IR "Café.txt" ,
+.IR "cafe!.txt" ,
+and
+.I "CAFÉ.txt"
+all become
+.IR "cafe.txt" ).
+The tool checks for existing targets before each rename and refuses to
+overwrite, but partial renames are possible when processing multiple files.
+.PP
+Always use
+.B \-n
+(dry run) first on unfamiliar directories.
+.SH SEE ALSO
+.BR mv (1),
+.BR rename (1),
+.BR find (1),
+.BR xargs (1),
+.BR detox (1)
+.SH AUTHORS
+Marek Kowalczyk
+.RI < mko1971@gmail.com >

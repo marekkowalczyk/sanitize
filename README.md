@@ -8,6 +8,12 @@ It lowercases, strips diacritics, replaces non-alphanumeric characters with hyph
 
 ## Installation
 
+### Pre-built binaries
+
+Download from [GitHub Releases](https://github.com/marekkowalczyk/sanitize/releases) -- binaries are available for Linux, macOS, and Windows (amd64 and arm64).
+
+### From source
+
 ```bash
 go install github.com/marekkowalczyk/sanitize@latest
 ```
@@ -78,15 +84,18 @@ sanitize -rn ~/Downloads/         # dry run: show what would be renamed
 san -r ~/Downloads/               # same thing via san symlink
 ```
 
-Recursive mode walks a directory tree depth-first, sanitizing all filenames and directory names. Deepest entries are renamed first so that parent renames don't invalidate child paths. The `-r` flag implies file mode (`-f`). Combines with `-n` for dry run.
+Recursive mode walks a directory tree depth-first, sanitizing all filenames and directory names. Deepest entries are renamed first so that parent renames don't invalidate child paths. The `-r` flag implies file mode (`-f`). Combines with `-n` for dry run. Handles SIGINT gracefully -- if you press Ctrl+C during a recursive rename, it stops cleanly between files rather than mid-rename.
 
 ### Dry run (`-n`)
 
 ```bash
-sanitize -f -n *.txt                   # show what would be renamed
-san -n *.txt                           # same thing
+sanitize -n *.txt                      # show what would be renamed (-n implies -f)
+sanitize -f -n *.txt                   # explicit -f also works
+san -n *.txt                           # same thing via san
 sanitize -fn *.txt                     # combined short flags also work
 ```
+
+The `-n` flag implies file mode (`-f`), since dry-run only makes sense for renames.
 
 ### Other flags
 
@@ -204,13 +213,26 @@ After migration, `/usr/local/bin/san.sh.bak` can be removed when you're confiden
 - Full path support (san.sh only worked with bare filenames)
 - Case-only renames work on macOS (san.sh's `mv -n` would block them)
 
-## Building with a version tag
+## Building and releasing
+
+### Local build with version tag
 
 ```bash
 go build -ldflags "-X main.version=1.0.0" .
 ```
 
 Without `-ldflags`, the version defaults to `dev`.
+
+### Releasing
+
+Releases are automated via [GoReleaser](https://goreleaser.com/) and GitHub Actions. To cut a release:
+
+```bash
+git tag v1.0.0
+git push --tags
+```
+
+This triggers `.github/workflows/release.yml`, which builds cross-platform binaries (linux/darwin/windows, amd64/arm64) and publishes them as a GitHub Release.
 
 ## Design philosophy
 
@@ -232,6 +254,7 @@ Flag handling follows POSIX conventions:
 |---|---|
 | Short flags | `-f`, `-r`, `-n`, `-0` |
 | Combined short flags | `-fn` equals `-f -n`, `-rn` equals `-r -n` |
+| Flag implication | `-n` implies `-f`, `-r` implies `-f` |
 | Long flags | `--file`, `--recursive`, `--dry-run`, `--null`, `--version`, `--help` |
 | `--` separator | `sanitize -- -hello` treats `-hello` as text, not a flag |
 | Unknown flag | prints error to stderr, exits 2 |
@@ -276,7 +299,26 @@ Because the transformation is lossy, multiple files in the same directory can sa
 go test -v
 ```
 
-The test suite includes 210+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, and CLI behavior.
+The test suite includes 240+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, context cancellation, and CLI behavior.
+
+### Benchmarks
+
+```bash
+go test -bench=. -benchmem -run=^$
+```
+
+Benchmarks cover each pipeline stage and the full `sanitize()`/`sanitizeFilename()` functions.
+
+### Man page
+
+A man page is included as `sanitize.1`. To install locally:
+
+```bash
+cp sanitize.1 /usr/local/share/man/man1/
+man sanitize
+```
+
+The man page is also included in goreleaser archives.
 
 ## Comparison with similar tools
 

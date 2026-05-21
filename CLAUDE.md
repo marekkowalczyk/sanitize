@@ -10,8 +10,9 @@ A Go CLI tool that sanitizes/normalizes strings for safe use as filenames. It lo
 
 ```bash
 go build .                          # build
-go test -v                          # run full test suite (210+ cases)
+go test -v                          # run full test suite (240+ cases)
 go test -run TestSanitize -v        # run a specific test group
+go test -bench=. -benchmem -run=^$  # run benchmarks
 ./sanitize "input text here"        # sanitize text
 ./sanitize -f "My File.txt"         # rename a file
 echo "text" | ./sanitize            # read from stdin
@@ -21,7 +22,7 @@ find . -print0 | ./sanitize -0      # null-delimited stdin
 
 Note: on macOS 10.14, use `GOTOOLCHAIN=local` to prevent automatic toolchain upgrades that fail on this OS version.
 
-Dependencies are managed via Go modules (`go.mod`). The main external dependency is `golang.org/x/text` for Unicode normalization and rune manipulation.
+Dependencies are managed via Go modules (`go.mod`). External dependencies are `golang.org/x/text` for Unicode normalization and rune manipulation, and `github.com/spf13/pflag` for POSIX-style flag parsing.
 
 ## Architecture
 
@@ -44,7 +45,8 @@ Key design decisions:
 - **Stdin mode**: `echo "text" | sanitize` -- read lines from stdin when no args and input is piped
 - **Null-delimited stdin**: `find . -print0 | sanitize -0` -- use null bytes instead of newlines as delimiters
 - **File mode**: `sanitize -f file.txt` or `san file.txt` -- rename files (splits name/extension, sanitizes each part)
-- **Recursive mode**: `sanitize -r dir/` or `san -r dir/` -- walk a directory tree depth-first, renaming all files and directories
+- **Recursive mode**: `sanitize -r dir/` or `san -r dir/` -- walk a directory tree depth-first, renaming all files and directories; handles SIGINT gracefully (stops between renames)
+- `-n` (dry-run) implies `-f` (file mode), since dry-run only makes sense for renames
 - When invoked as `san` (via symlink), file rename mode is automatic
 - `--version` prints version and exits
 - `--help` / `-h` prints usage and exits
@@ -53,10 +55,13 @@ Key design decisions:
 
 Tests are in `sanitize_test.go` and cover:
 - Unit tests for each pipeline stage
+- Unit tests for `renameOne`/`renameFiles`/`renameRecursive` (using `io.Writer` for output capture)
 - Integration tests for the full `sanitize()` function
 - Pipeline ordering verification
 - Idempotency tests
+- Context cancellation (graceful interrupt)
 - CLI integration tests (stdin, args, exit codes, `-f` mode, `-r` recursive, `san` symlink, `-0` null mode, `-n` dry run, `--version`)
+- Benchmarks for each pipeline stage and full `sanitize()`/`sanitizeFilename()`
 
 ## Supporting Files
 
@@ -67,3 +72,6 @@ Tests are in `sanitize_test.go` and cover:
 - `BACKLOG.md` -- Feature backlog and planned improvements
 - `CODE-REVIEW.md` -- Code review with issue tracker (all issues resolved)
 - `.github/workflows/test.yml` -- CI: runs `go build` and `go test` on push/PR
+- `.github/workflows/release.yml` -- Release: runs goreleaser on `v*` tags to build cross-platform binaries
+- `.goreleaser.yml` -- Goreleaser config: builds for linux/darwin/windows (amd64/arm64)
+- `sanitize.1` -- Man page in troff format (`nroff -man sanitize.1` to preview)

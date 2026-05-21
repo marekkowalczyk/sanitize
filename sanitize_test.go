@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -1001,5 +1003,204 @@ func TestIdempotency(t *testing.T) {
 				t.Errorf("not idempotent: sanitize(%q) = %q, sanitize(%q) = %q", input, once, once, twice)
 			}
 		})
+	}
+}
+
+// --- Unit tests for renameOne with io.Writer ---
+
+func TestRenameOneOutput(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "Hello World.txt")
+	os.WriteFile(src, []byte("test"), 0644)
+
+	var buf bytes.Buffer
+	code := renameOne(src, false, &buf)
+
+	if code != 0 {
+		t.Fatalf("renameOne returned %d, want 0", code)
+	}
+
+	dst := filepath.Join(dir, "hello-world.txt")
+	if _, err := os.Stat(dst); os.IsNotExist(err) {
+		t.Error("expected destination file to exist")
+	}
+
+	if !strings.Contains(buf.String(), "hello-world.txt") {
+		t.Errorf("output should mention target, got: %q", buf.String())
+	}
+}
+
+func TestRenameOneDryRunOutput(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "Hello World.txt")
+	os.WriteFile(src, []byte("test"), 0644)
+
+	var buf bytes.Buffer
+	code := renameOne(src, true, &buf)
+
+	if code != 0 {
+		t.Fatalf("renameOne returned %d, want 0", code)
+	}
+
+	// Source should still exist
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		t.Error("source should still exist in dry-run")
+	}
+
+	if !strings.Contains(buf.String(), "hello-world.txt") {
+		t.Errorf("dry-run output should mention target, got: %q", buf.String())
+	}
+}
+
+func TestRenameOneSkipsClean(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "hello.txt")
+	os.WriteFile(src, []byte("test"), 0644)
+
+	var buf bytes.Buffer
+	code := renameOne(src, false, &buf)
+
+	if code != 0 {
+		t.Fatalf("renameOne returned %d, want 0", code)
+	}
+	if buf.Len() > 0 {
+		t.Errorf("should produce no output for clean file, got: %q", buf.String())
+	}
+}
+
+func TestRenameOneCollision(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "Hello World.txt")
+	dst := filepath.Join(dir, "hello-world.txt")
+	os.WriteFile(src, []byte("source"), 0644)
+	os.WriteFile(dst, []byte("existing"), 0644)
+
+	var buf bytes.Buffer
+	code := renameOne(src, false, &buf)
+
+	if code != 1 {
+		t.Fatalf("renameOne returned %d, want 1 for collision", code)
+	}
+	if !strings.Contains(buf.String(), "target already exists") {
+		t.Errorf("should report collision, got: %q", buf.String())
+	}
+}
+
+func TestRenameFilesOutput(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "Hello.txt"), []byte("test"), 0644)
+	os.WriteFile(filepath.Join(dir, "World.pdf"), []byte("test"), 0644)
+
+	var buf bytes.Buffer
+	code := renameFiles([]string{
+		filepath.Join(dir, "Hello.txt"),
+		filepath.Join(dir, "World.pdf"),
+	}, false, &buf)
+
+	if code != 0 {
+		t.Fatalf("renameFiles returned %d, want 0", code)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "hello.txt") || !strings.Contains(output, "world.pdf") {
+		t.Errorf("should mention both targets, got: %q", output)
+	}
+}
+
+func TestRenameRecursiveOutput(t *testing.T) {
+	dir := t.TempDir()
+	subDir := filepath.Join(dir, "Sub Dir")
+	os.MkdirAll(subDir, 0755)
+	os.WriteFile(filepath.Join(subDir, "My File.txt"), []byte("test"), 0644)
+
+	var buf bytes.Buffer
+	code := renameRecursive(context.Background(), dir, false, &buf)
+
+	if code != 0 {
+		t.Fatalf("renameRecursive returned %d, want 0", code)
+	}
+
+	if _, err := os.Stat(filepath.Join(dir, "sub-dir", "my-file.txt")); os.IsNotExist(err) {
+		t.Error("expected recursive rename to work")
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "my-file.txt") || !strings.Contains(output, "sub-dir") {
+		t.Errorf("should mention renames, got: %q", output)
+	}
+}
+
+// --- Benchmarks ---
+
+func BenchmarkRemoveIllFormed(b *testing.B) {
+	for b.Loop() {
+		removeIllFormed("Hello\x80World café")
+	}
+}
+
+func BenchmarkToLower(b *testing.B) {
+	for b.Loop() {
+		toLower("Hello World CAFÉ")
+	}
+}
+
+func BenchmarkRemoveAccents(b *testing.B) {
+	for b.Loop() {
+		removeAccents("Zażółć gęślą jaźń")
+	}
+}
+
+func BenchmarkReplaceNonAlphaNum(b *testing.B) {
+	for b.Loop() {
+		replaceNonAlphaNum("hello, world! (2024)")
+	}
+}
+
+func BenchmarkDedupHyp(b *testing.B) {
+	for b.Loop() {
+		dedupHyp("a--b---c----d")
+	}
+}
+
+func BenchmarkTrimEnds(b *testing.B) {
+	for b.Loop() {
+		trimEnds("---hello-world---")
+	}
+}
+
+func BenchmarkSanitize(b *testing.B) {
+	for b.Loop() {
+		sanitize("Meeting Notes (2024-03-15) — Zażółć gęślą jaźń!")
+	}
+}
+
+func BenchmarkSanitizeFilename(b *testing.B) {
+	for b.Loop() {
+		sanitizeFilename("Meeting Notes (2024-03-15).PDF")
+	}
+}
+
+func TestRenameRecursiveCancellation(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create many files so we can observe partial rename
+	for i := 0; i < 10; i++ {
+		name := string(rune('A'+i)) + " File.txt"
+		os.WriteFile(filepath.Join(dir, name), []byte("test"), 0644)
+	}
+
+	// Cancel immediately — should stop before renaming all files
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // cancel before starting
+
+	var buf bytes.Buffer
+	code := renameRecursive(ctx, dir, false, &buf)
+
+	if code != 1 {
+		t.Fatalf("cancelled renameRecursive should return 1, got %d", code)
+	}
+
+	if !strings.Contains(buf.String(), "interrupted") {
+		t.Errorf("should report interruption, got: %q", buf.String())
 	}
 }

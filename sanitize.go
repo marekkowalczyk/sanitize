@@ -6,8 +6,11 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
+	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -94,7 +97,7 @@ func sameFile(a, b string) bool {
 }
 
 // renameOne renames a single file or directory. Returns 0 on success or skip, 1 on error.
-func renameOne(path string, dryRun bool) int {
+func renameOne(path string, dryRun bool, w io.Writer) int {
 	dir := filepath.Dir(path)
 	oldName := filepath.Base(path)
 	newName := sanitizeFilename(oldName)
@@ -105,34 +108,34 @@ func renameOne(path string, dryRun bool) int {
 
 	dst := filepath.Join(dir, newName)
 	if _, err := os.Stat(dst); err == nil && !sameFile(path, dst) {
-		fmt.Fprintf(os.Stderr, "sanitize: %s → %s: target already exists\n", path, dst)
+		fmt.Fprintf(w, "sanitize: %s → %s: target already exists\n", path, dst)
 		return 1
 	}
 
 	if dryRun {
-		fmt.Fprintf(os.Stderr, "%s → %s\n", path, dst)
+		fmt.Fprintf(w, "%s → %s\n", path, dst)
 		return 0
 	}
 
 	if err := os.Rename(path, dst); err != nil {
-		fmt.Fprintf(os.Stderr, "sanitize: %s: %v\n", path, err)
+		fmt.Fprintf(w, "sanitize: %s: %v\n", path, err)
 		return 1
 	}
-	fmt.Fprintf(os.Stderr, "%s → %s\n", path, dst)
+	fmt.Fprintf(w, "%s → %s\n", path, dst)
 	return 0
 }
 
-func renameFiles(paths []string, dryRun bool) int {
+func renameFiles(paths []string, dryRun bool, w io.Writer) int {
 	exitCode := 0
 	for _, path := range paths {
-		if code := renameOne(path, dryRun); code != 0 {
+		if code := renameOne(path, dryRun, w); code != 0 {
 			exitCode = code
 		}
 	}
 	return exitCode
 }
 
-func renameRecursive(root string, dryRun bool) int {
+func renameRecursive(ctx context.Context, root string, dryRun bool, w io.Writer) int {
 	exitCode := 0
 
 	// Collect all entries first, then process depth-first.
@@ -142,7 +145,7 @@ func renameRecursive(root string, dryRun bool) int {
 
 	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "sanitize: %s: %v\n", path, err)
+			fmt.Fprintf(w, "sanitize: %s: %v\n", path, err)
 			exitCode = 1
 			return nil
 		}
@@ -153,7 +156,11 @@ func renameRecursive(root string, dryRun bool) int {
 	})
 
 	for i := len(paths) - 1; i >= 0; i-- {
-		if code := renameOne(paths[i], dryRun); code != 0 {
+		if ctx.Err() != nil {
+			fmt.Fprintf(w, "sanitize: interrupted, stopping\n")
+			return 1
+		}
+		if code := renameOne(paths[i], dryRun, w); code != 0 {
 			exitCode = code
 		}
 	}
@@ -240,15 +247,17 @@ Examples:
 			os.Exit(1)
 		}
 		if *recursive {
+			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+			defer stop()
 			exitCode := 0
 			for _, dir := range flag.Args() {
-				if code := renameRecursive(dir, *dryRun); code != 0 {
+				if code := renameRecursive(ctx, dir, *dryRun, os.Stderr); code != 0 {
 					exitCode = code
 				}
 			}
 			os.Exit(exitCode)
 		}
-		os.Exit(renameFiles(flag.Args(), *dryRun))
+		os.Exit(renameFiles(flag.Args(), *dryRun, os.Stderr))
 	}
 
 	if flag.NArg() == 0 {
