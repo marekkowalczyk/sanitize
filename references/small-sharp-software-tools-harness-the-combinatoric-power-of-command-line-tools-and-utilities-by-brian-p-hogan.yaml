@@ -1,0 +1,120 @@
+---
+title: "Small, Sharp Software Tools"
+subtitle: "Harness the Combinatoric Power of Command-Line Tools and Utilities"
+author: "Brian P. Hogan"
+editor: "Tammy Coron"
+publisher: "The Pragmatic Bookshelf"
+location: "Raleigh, North Carolina"
+date: "2019-05"
+version: "Book version: P1.0"
+isbn-13: "978-1-68050-296-1"
+copyright: "Copyright © 2019 The Pragmatic Programmers, LLC."
+language: "en-US"
+audience: "Software developers, programmers, and power users looking to master the command-line interface (CLI) to optimize their productivity and workflow."
+environment:
+  shell: "Bash"
+  utilities_flavour: "GNU Utilities (with compatibility and installation notes for BSD versions on macOS)"
+  supported_platforms:
+    - "Linux (Ubuntu)"
+    - "macOS"
+    - "Windows 10 (via Windows Subsystem for Linux - WSL)"
+abstract: |
+  This book serves as a practical, hands-on guide for developers to master the command-line interface (CLI) using the Bash shell and GNU text-processing utilities. Rather than traversing esoteric syntax, it concentrates on foundational building blocks that enable users to compose powerful combinatoric pipelines and automate redundant operations. Topics covered span filesystem navigation, advanced file operations, standard input/output stream engineering (including redirection descriptors and tools like grep, sed, and awk), runtime shell customization, process/job management, network diagnostics, automation via Makefiles/Bash scripts, and modern utility integrations (such as ranger, jq, fzf, and pandoc).
+keywords:
+  - Command-Line Interface (CLI)
+  - Bash Shell
+  - GNU Utilities
+  - Text Processing Streams
+  - Redirection & File Descriptors
+  - Workflow Automation
+  - Shell Scripting
+  - Process Management
+  - Networking Utilities
+  - Makefiles
+toc: true
+outline:
+  - chapter: 1
+    title: "Getting Your Feet Wet"
+    pages: "1-16"
+    topics:
+      - "Accessing terminal emulators across Linux, macOS, and Windows Subsystem for Linux (WSL)"
+      - "Basic directory exploration and relative structural awareness (pwd, ls, cd)"
+      - "Creating files, viewing contents, and simple text redirection (echo, cat, less, more)"
+      - "Package management systems introduction and accessing local instruction manuals (man)"
+  - chapter: 2
+    title: "Creating an Ubuntu Virtual Machine with VirtualBox"
+    pages: "17-32"
+    topics:
+      - "Deploying localized, non-destructive sandboxes using VirtualBox virtualization"
+      - "Configuring virtual guest networking adapters and installing the Ubuntu OS image"
+      - "Managing execution states via snapshots and installing Guest Additions for performance scaling"
+  - chapter: 3
+    title: "Navigating the Filesystem"
+    pages: "33-54"
+    topics:
+      - "Understanding file hierarches using absolute vs. relative path execution"
+      - "Comprehensive directory listing filters, deep wildcard pattern matching, and file indexing"
+      - "Diagnostic inspection of filesystem metrics and evaluating available storage parameters"
+  - chapter: 4
+    title: "Working with Files and Directories"
+    pages: "55-90"
+    topics:
+      - "Multi-line file writes, file concatenation workflows, and large file chunking"
+      - "Generating directory sub-trees efficiently via brace expansion and parent creation flags (-p)"
+      - "File manipulation operations: copying, moving, renaming, and definitive deletion metrics"
+      - "POSIX file permission blocks, user ownership scopes, and symlink/hardlink wiring"
+  - chapter: 5
+    title: "Streams of Text"
+    pages: "91-124"
+    topics:
+      - "I/O stream routing via file descriptors: STDIN (0), STDOUT (1), and STDERR (2)"
+      - "Pipeline integration using pipes (|), multi-routing splits (tee), and pattern filtering (grep)"
+      - "Stream slicing, column parsing, data sorting, and stream editing engines (cut, sort, sed, awk, xargs)"
+  - chapter: 6
+    title: "The Shell and Environment"
+    pages: "125-160"
+    topics:
+      - "Inspecting, declaring, and exporting environmental and localized session variables"
+      - "Terminal text editing fundamentals leveraging GNU nano"
+      - "Persistent configuration customization via shell startup runcom environments (~/.bashrc)"
+      - "Constructing structural abbreviations, functional scripts, and specialized keyboard readline hotkeys"
+  - chapter: 7
+    title: "Running and Managing Programs"
+    pages: "161-198"
+    topics:
+      - "Locating binaries, exploring operational histories, and subshell scope boundaries"
+      - "Job control scheduling, switching foreground/background processes, and system signal manipulation"
+      - "Dynamic string generation via command substitution and session persistence with GNU Screen"
+  - chapter: 8
+    title: "Networking Tools"
+    pages: "199-230"
+    topics:
+      - "Network adapter mapping, local IP diagnostics, and domain name infrastructure queries"
+      - "Connectivity profiling, payload ingestion, and programmatic web API interaction via cURL"
+      - "Secure shell remote multiplexing (SSH) and cryptographic transport layers (scp, rsync)"
+      - "Network socket tracking and low-level data streaming using Netcat"
+  - chapter: 9
+    title: "Automation"
+    pages: "231-254"
+    topics:
+      - "Automating multi-stage target builds and dependency mapping utilizing GNU Make (Makefiles)"
+      - "Authoring interactive, fault-tolerant executable automations with Bash scripts"
+      - "Configuring repeatable system environment bootstrapping routines"
+  - chapter: 10
+    title: "Additional Programs"
+    pages: "255-286"
+    topics:
+      - "Visual console file cataloging and batch tree traversal using ranger"
+      - "Directory-isolated, environment context tracking tools (direnv)"
+      - "Fuzzy file parsing with fzf, and structured JSON payload parsing via jq"
+      - "Document formatting pipelines with Pandoc, file-system change hooks via entr, and API stress testing"
+appendices:
+  - appendix: "A1"
+    title: "Command Quick Reference"
+    pages: "287-290"
+    description: "A consolidated alphabetical index mapping all core tools used throughout the text for rapid reference."
+  - appendix: "A2"
+    title: "Installing GNU Utilities on macOS"
+    pages: "291-294"
+    description: "An adaptation guide detailing how to use Homebrew to install coreutils, diffutils, and findutils to bypass BSD default variances."
+---

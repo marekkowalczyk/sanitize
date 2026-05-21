@@ -148,7 +148,7 @@ Hello你好World   ->   hello-world
 
 ## DEVONthink integration
 
-`DEVONthink-Sanitize-Filenames.applescript` sanitizes names of selected DEVONthink records, setting the `Finder Comment` field to the original filename. Note: the existing Finder Comment is overwritten.
+`contrib/DEVONthink-Sanitize-Filenames.applescript` sanitizes names of selected DEVONthink records, setting the `Finder Comment` field to the original filename. Note: the existing Finder Comment is overwritten.
 
 ### Installing the script in DEVONthink
 
@@ -156,13 +156,13 @@ Hello你好World   ->   hello-world
 2. Go to **DEVONthink > Preferences > Scripts** (or in DEVONthink 3, the Scripts folder is at `~/Library/Application Scripts/com.devon-technologies.think3/Menu`)
 3. Copy or symlink the script into the DEVONthink scripts folder:
    ```bash
-   cp DEVONthink-Sanitize-Filenames.applescript \
+   cp contrib/DEVONthink-Sanitize-Filenames.applescript \
      ~/Library/Application\ Scripts/com.devon-technologies.think3/Menu/Sanitize\ Filenames.scpt
    ```
    Or compile and copy:
    ```bash
    osacompile -o ~/Library/Application\ Scripts/com.devon-technologies.think3/Menu/Sanitize\ Filenames.scpt \
-     DEVONthink-Sanitize-Filenames.applescript
+     contrib/DEVONthink-Sanitize-Filenames.applescript
    ```
 4. The script appears in the **Scripts** menu inside DEVONthink
 5. Select one or more records, then run the script from the menu
@@ -291,7 +291,7 @@ Because the transformation is lossy, multiple files in the same directory can sa
 
 **Remaining risk -- partial renames:** When renaming multiple files (`-f *.txt`) or recursively (`-r`), the first collision succeeds and subsequent ones are skipped. This leaves you in a half-renamed state: some files moved, others didn't. With `-r` on a deep directory tree this can be especially messy, as some directories may have been renamed while files inside sibling directories were blocked.
 
-**Mitigation:** Always use `-n` (dry run) first on unfamiliar directories to check for collisions before committing to renames. See BACKLOG.md for a planned pre-scan feature that would detect all collisions up front and abort before any renames happen.
+**Mitigation:** Always use `-n` (dry run) first on unfamiliar directories to check for collisions before committing to renames. See docs/BACKLOG.md for a planned pre-scan feature that would detect all collisions up front and abort before any renames happen.
 
 ## Testing
 

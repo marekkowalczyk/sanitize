@@ -1,0 +1,154 @@
+---
+title: "Powerful Command-Line Applications in Go"
+subtitle: "Build Fast and Maintainable Tools"
+author:
+  - name: "Ricardo Gerardi"
+editor:
+  - name: "Brian P. Hogan"
+foreword_by: "Steve Francia"
+publisher: "The Pragmatic Bookshelf"
+location: "Raleigh, North Carolina"
+copyright: "Copyright © 2021 The Pragmatic Programmers, LLC"
+isbn_13: "978-1-68050-696-9"
+book_version: "P1.0—December 2021"
+language: "en-US"
+document_type: "Technical Instruction / Software Engineering Book"
+abstract: |
+  A comprehensive guide to designing, building, testing, and distributing high-performance, cross-platform command-line interface (CLI) applications using the Go programming language. The text assumes existing familiarity with fundamental Go syntax and focuses on deep engineering patterns for automation, system administration, and tools development. Topics covered include Unix I/O streaming standards, cross-platform file system handling, concurrency patterns (goroutines/channels), execution profiling and optimization, process management, standard and third-party frameworks (Cobra/Viper), REST API clients and servers, interactive terminal user interfaces (TUIs), SQLite database interaction, and software distribution across containers and architectures.
+keywords:
+  - Go
+  - Golang
+  - Command-Line Interface (CLI)
+  - Automation
+  - Cobra Framework
+  - Viper Configuration
+  - Test-Driven Development (TDD)
+  - Benchmarking
+  - Profiling (pprof)
+  - Tracing (go tool trace)
+  - Concurrency
+  - Process Control
+  - REST API
+  - Terminal User Interface (TUI)
+  - SQLite
+  - Cross-Compilation
+  - Linux Containers
+target_audience:
+  - System Administrators
+  - Network Engineers
+  - DevOps Specialists
+  - Software Engineers
+prerequisites:
+  - Proficiency in basic Go syntax (variables, custom types, flow control, program structure).
+  - Go version 1.13 or higher (with Go Modules enabled by default).
+  - Familiarity with a command shell (Bash/Unix standard environments).
+technical_stack:
+  language: "Go (version 1.16 status at writing)"
+  dependency_management: "Go Modules (go.mod, go.sum)"
+  core_standard_libraries:
+    - bufio
+    - fmt
+    - io
+    - os
+    - flag
+    - filepath
+    - log
+    - compress/gzip
+    - encoding/csv
+    - encoding/json
+    - net/http
+    - database/sql
+    - text/template
+    - os/exec
+    - context
+    - os/signal
+  third_party_packages:
+    - github.com/spf13/cobra (CLI execution framework)
+    - github.com/spf13/viper (Configuration lifecycle engine)
+    - github.com/mum4k/termdash (Interactive terminal widgets)
+    - github.com/mattn/go-sqlite3 (SQLite database driver wrapper)
+    - github.com/russross/blackfriday/v2 (Markdown parsing utility)
+    - github.com/microcosm-cc/bluemonday (HTML sanitation protection)
+core_architectural_patterns:
+  - "Decoupling business logic from the CLI presentation layer into independent packages"
+  - "Heavy reliance on standard interfaces (e.g., io.Reader, io.Writer) to support robust testing mockups"
+  - "Extensive testing suites including table-driven tests, test helpers, golden files, and integration boundaries"
+  - "Iterative programmatic tuning guided directly by empirical CPU/memory profiling and execution tracking"
+chapter_blueprint:
+  - chapter: 1
+    title: "Your First Command-Line Program in Go"
+    page_start: 1
+    project_name: "wc (Word Counter)"
+    core_focus: "Basic CLI anatomy, entry point compilation, basic testing, and cross-compilation."
+    key_components: ["main package structure", "bufio.NewScanner stream reading", "flag package declaration", "multi-platform compilation targets"]
+  - chapter: 2
+    title: "Interacting with Your Users"
+    page_start: 11
+    project_name: "todo (To-Do List Tool)"
+    core_focus: "Adhering to POSIX input/output streaming conventions, structure-based logic division, and serialization."
+    key_components: ["STDIN, STDOUT, and STDERR separation", "encoding/json structure storage", "environment variables configuration handling", "io.Reader dependency decoupling"]
+  - chapter: 3
+    title: "Working with Files in Go"
+    page_start: 45
+    project_name: "mdp (Markdown Preview Tool)"
+    core_focus: "Dynamic cross-platform safe path execution, text generation, and temporary storage safety."
+    key_components: ["os file descriptor lifecycles", "filepath abstract formatting", "defer resource reclamation safety", "text/template visual scaffolding"]
+  - chapter: 4
+    title: "Navigating the File System"
+    page_start: 77
+    project_name: "walk (File System Crawler)"
+    core_focus: "Recursive directory structure walks, structural test tables, system log output, and stream manipulation."
+    key_components: ["filepath.Walk structural loops", "custom log.New file handlers", "compress/gzip binary archiving", "table-driven assertions & test helpers"]
+  - chapter: 5
+    title: "Improving the Performance of Your CLI Tools"
+    page_start: 113
+    project_name: "colStats (Column Statistics Tool)"
+    core_focus: "CSV manipulation, application profiling, multi-threaded execution scaling, and state collision containment."
+    key_components: ["encoding/csv parsing engines", "testing.B benchmarking", "runtime/pprof CPU/Memory investigation", "goroutines, channels, and sync.WaitGroup architectures"]
+  - chapter: 6
+    title: "Controlling Processes"
+    page_start: 163
+    project_name: "goci (Continuous Integration Tool)"
+    core_focus: "External system program interception, safe timeout orchestration, and system interrupt handling."
+    key_components: ["os/exec commands lifecycle execution", "context.WithTimeout task constraint models", "local Git mockup test setups", "os/signal interruption intercepts"]
+  - chapter: 7
+    title: "Using the Cobra CLI Framework"
+    page_start: 213
+    project_name: "scan (Network Port Scanner)"
+    core_focus: "Advanced multi-tier subcommands, persistent global configurations, shell completions, and auto-documentation."
+    key_components: ["cobra.Command hierarchy trees", "Viper data binding layers", "POSIX standard compliance matching", "doc.GenMarkdownTree self-documenting features"]
+  - chapter: 8
+    title: "Talking to REST APIs"
+    page_start: 273
+    project_name: "todoServer & todoClient (REST Services)"
+    core_focus: "HTTP routing infrastructure execution, remote service clients, header configurations, and server network isolation testing."
+    key_components: ["net/http RESTful design routing", "JSON network streaming", "net/http/httptest locally isolated execution verification", "custom request configurations"]
+  - chapter: 9
+    title: "Developing Interactive Terminal Tools"
+    page_start: 347
+    project_name: "pomo (Pomodoro Application UI)"
+    core_focus: "Terminal display dashboards, state repositories, visual interfaces layout engines, and asynchronous tracking loops."
+    key_components: ["termdash widget engines", "repository structure patterns", "asynchronous event execution tracking", "Cobra CLI orchestrations"]
+  - chapter: 10
+    title: "Persisting Data in a SQL Database"
+    page_start: 395
+    project_name: "pomo SQLite Layer"
+    core_focus: "Relational persistence layers, schema updates, transaction rollback mockups, and analytical analytics summaries."
+    key_components: ["database/sql connections engines", "go-sqlite3 embed processing", "automated transactional database testing", "complex query data aggregations"]
+  - chapter: 11
+    title: "Distributing Your Tool"
+    page_start: 433
+    project_name: "notify (OS Notification System)"
+    core_focus: "Cross-platform variations control, assembly tags, minimalistic image containerized packaging, and public repository layouts."
+    key_components: ["//go:build compilation constraints", "CGO bridge boundaries", "Scratch & Distroless multi-stage Docker builds", "go get source dissemination guidelines"]
+testing_and_diagnostic_framework:
+  validation_modes:
+    - "Standard library 'testing' frameworks integration"
+    - "Table-driven automated assertions matrix"
+    - "Isolated testing boundaries using interface abstraction inputs"
+    - "Golden File tracking for absolute validation of multiline outputs"
+    - "Mock system subprocess execution using local path injections"
+    - "Isolated local API validation via net/http/httptest"
+    - "Empirical performance measuring with go test -bench"
+    - "Runtime profile graphing using go tool pprof and go tool trace graphical visualizations"
+---

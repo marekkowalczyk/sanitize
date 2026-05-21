@@ -67,10 +67,11 @@ Tests are in `sanitize_test.go` and cover:
 
 - `legacy/san.sh` -- Legacy bash wrapper, superseded by `sanitize -f` / `san` symlink
 - `legacy/config.yml` -- Old Super-Linter config, replaced by `.github/workflows/test.yml`
-- `DEVONthink-Sanitize-Filenames.applescript` -- AppleScript for sanitizing DEVONthink record names (saves originals in Finder Comment field). See README for installation instructions.
-- `AAR.md` -- After Action Review / continuous improvement log
-- `BACKLOG.md` -- Feature backlog and planned improvements
-- `CODE-REVIEW.md` -- Code review with issue tracker (all issues resolved)
+- `contrib/DEVONthink-Sanitize-Filenames.applescript` -- AppleScript for sanitizing DEVONthink record names (saves originals in Finder Comment field). See README for installation instructions.
+- `docs/AAR.md` -- After Action Review / continuous improvement log
+- `docs/BACKLOG.md` -- Feature backlog and planned improvements
+- `docs/CODE-REVIEW.md` -- Code review with issue tracker (all issues resolved)
+- `references/` -- Book summary YAMLs (reference material, not part of the tool)
 - `.github/workflows/test.yml` -- CI: runs `go build` and `go test` on push/PR
 - `.github/workflows/release.yml` -- Release: runs goreleaser on `v*` tags to build cross-platform binaries
 - `.goreleaser.yml` -- Goreleaser config: builds for linux/darwin/windows (amd64/arm64)
