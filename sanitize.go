@@ -193,8 +193,32 @@ func main() {
 	dryRun := flag.BoolP("dry-run", "n", false, "dry run: show what would be renamed without renaming")
 	nullDelim := flag.BoolP("null", "0", false, "use null byte as delimiter instead of newline (for stdin mode)")
 	showVersion := flag.Bool("version", false, "print version and exit")
+	isSan := invokedAsSan()
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, `Usage: sanitize [flags] <text>...
+		if isSan {
+			fmt.Fprintf(os.Stderr, `Usage: san [-rn] <file|dir>...
+
+Sanitize filenames. Lowercases, strips diacritics, replaces non-alphanumeric
+characters with hyphens, deduplicates hyphens, and trims leading/trailing
+non-alphanumeric characters.
+
+Flags:
+  -r, --recursive   recursively rename files in directories
+  -n, --dry-run     show what would be renamed without renaming
+      --version     print version and exit
+  -h, --help        print this help
+
+Short flags can be combined: -rn equals -r -n.
+
+Examples:
+  san "My File.PDF"                 → my-file.pdf
+  san *.txt                         → rename multiple files
+  san -n *.txt                      → dry run (show renames)
+  san -r ~/Downloads/               → recursive rename
+  san -rn ~/Downloads/              → recursive dry run
+`)
+		} else {
+			fmt.Fprintf(os.Stderr, `Usage: sanitize [flags] <text>...
        sanitize -f [-n] <file>...
        sanitize -r [-n] <dir>...
        san [-rn] <file|dir>...
@@ -231,15 +255,20 @@ Examples:
   san -r ~/Downloads/               → recursive rename via san
   sanitize -- -hello                → treats -hello as text
 `)
+		}
 	}
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("sanitize %s\n", version)
+		name := "sanitize"
+		if isSan {
+			name = "san"
+		}
+		fmt.Printf("%s %s\n", name, version)
 		return
 	}
 
-	isFileMode := *fileMode || *recursive || *dryRun || invokedAsSan()
+	isFileMode := *fileMode || *recursive || *dryRun || isSan
 
 	if isFileMode {
 		if flag.NArg() == 0 {

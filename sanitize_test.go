@@ -229,6 +229,47 @@ func TestCLISanSymlinkNoArgs(t *testing.T) {
 	}
 }
 
+func TestCLISanHelp(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	sanLink := filepath.Join(dir, "san")
+	os.Symlink(binary, sanLink)
+
+	// "san --help" should show san-specific usage, not "sanitize"
+	cmd := exec.Command(sanLink, "--help")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("san --help failed: %v\noutput: %s", err, out)
+	}
+
+	output := string(out)
+	if !strings.Contains(output, "Usage: san") {
+		t.Errorf("san --help should show 'Usage: san', got:\n%s", output)
+	}
+	if strings.Contains(output, "Usage: sanitize") {
+		t.Errorf("san --help should not show 'Usage: sanitize', got:\n%s", output)
+	}
+}
+
+func TestCLISanVersion(t *testing.T) {
+	binary := buildBinary(t)
+	dir := t.TempDir()
+
+	sanLink := filepath.Join(dir, "san")
+	os.Symlink(binary, sanLink)
+
+	cmd := exec.Command(sanLink, "--version")
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("san --version failed: %v", err)
+	}
+	output := strings.TrimSpace(string(out))
+	if !strings.HasPrefix(output, "san ") {
+		t.Errorf("san --version should start with 'san ', got: %q", output)
+	}
+}
+
 // --- Dry-run mode (-n) CLI tests ---
 
 func TestCLIDryRun(t *testing.T) {

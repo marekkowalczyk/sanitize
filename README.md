@@ -299,7 +299,7 @@ Because the transformation is lossy, multiple files in the same directory can sa
 go test -v
 ```
 
-The test suite includes 240+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, context cancellation, and CLI behavior.
+The test suite includes 250+ cases covering individual pipeline stages, full integration, pipeline ordering, idempotency, file renaming, recursive directory renaming, dry run, null-delimited I/O, stdin processing, combined flags, context cancellation, and CLI behavior.
 
 ### Benchmarks
 

@@ -26,6 +26,17 @@ Allow a character other than `-` as the replacement separator. For example, `_` 
 
 Write a manifest of old→new renames (e.g., `.sanitize-manifest.json`) so a batch rename can be reversed. Useful for `-r` on large directory trees where mistakes are costly.
 
+## Automatic `san` symlink on install
+
+Currently `go install` only creates the `sanitize` binary. Users must manually `ln -s` to get `san`. Options considered:
+
+- **Homebrew formula** — the natural place. A formula can create the symlink as a post-install step. This is the strongest argument for implementing the Homebrew tap (see below).
+- **Makefile `install` target** — `go install && ln -sf $(go env GOPATH)/bin/sanitize /usr/local/bin/san`. Works but requires `make install` instead of `go install`.
+- **goreleaser post-install** — not supported for tarballs; only packaging formats (deb/rpm/brew) handle post-install hooks.
+- **Ship two binaries** (`cmd/san/main.go` wrapper) — overkill for a symlink.
+
+**Recommendation:** Solve this via the Homebrew tap rather than adding Go-level complexity. The adaptive help text (showing `san`-specific usage when invoked as `san`) is already implemented.
+
 ## Homebrew tap
 
 **Priority: medium.** Create a personal Homebrew tap (`homebrew-sanitize` repo on GitHub) so users can `brew tap marekkowalczyk/sanitize && brew install sanitize`. Goreleaser can auto-generate and push the Formula on each release — it's ~10 lines of config in `.goreleaser.yml` plus an empty GitHub repo. Natural next step given goreleaser is already set up. Submitting to homebrew-core (the official tap) is premature — requires meaningful adoption/stars and goes through their review process. MacPorts requires manually submitting a Portfile to their ports tree, has a smaller audience than Homebrew, and has no goreleaser integration — not worth the effort unless someone asks.
