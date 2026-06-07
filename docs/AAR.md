@@ -55,6 +55,20 @@ Continuous improvement log. Each session ends with a brief review: what went wel
 - When accepting LLM-generated test code, always create it as a separate file rather than replacing existing tests — review before integrating
 - For `filepath.Ext` edge cases, build a small truth table of inputs (empty, dots-only, leading dots, multiple dots) before coding
 
+## 2026-06-07 — Cleanup of stale repo copy, assessment update
+
+**What went well:**
+- Discovered and removed the stale `~/go/src/sanitize/` copy — single source of truth is now `~/repos/sanitize/`
+- Assessment update in `~/repos/system/` reflects the real state of the project
+
+**What didn't go well:**
+- Spent time doing v1.0.0 prep work (go.mod, tests, exporting) on the wrong copy of the repo — all of it already existed in `~/repos/sanitize/`
+- Deleting the current working directory mid-session killed the shell, blocking the close checklist and requiring a restart
+
+**What we'll do differently:**
+- When multiple copies of a repo exist, identify the canonical one before making any changes
+- Never delete the current working directory during a session — move/rename it instead, or switch to a different directory first
+
 ## 2026-05-20 — Competitive analysis, refactor renameOne
 
 **What went well:**
