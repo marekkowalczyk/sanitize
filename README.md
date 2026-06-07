@@ -1,12 +1,22 @@
 # sanitize
 
-A Go CLI tool that sanitizes/normalizes strings for safe use as filenames.
+**Zero-config filename sanitizer.** Turn any string into a clean, portable filename -- lowercase, ASCII-only, no spaces, no surprises. Single binary, no dependencies, no configuration.
 
-Inspired by the principles in Brian P. Hogan's *Small, Sharp Software Tools*, `sanitize` aims to be a well-behaved Unix citizen: it does one thing well, works with text streams, uses standard I/O conventions, stays quiet, and composes with other tools via pipes.
+```
+"Łódź — Recipe (Final).pdf"  →  lodz-recipe-final.pdf
+```
 
-It lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims leading/trailing non-alphanumeric characters. Output is restricted to Latin-script characters, digits, and hyphens.
+Inspired by Brian P. Hogan's *Small, Sharp Software Tools*: does one thing well, works with text streams, composes with pipes, stays quiet.
 
-Designed for mission-critical use: every output is validated against a strict postcondition (`[a-z0-9-]` for strings, `[a-z0-9.-]` for filenames) before being returned. If the pipeline produces any disallowed character, the tool fails with a diagnostic error rather than silently passing through an unsafe result.
+### Why another tool?
+
+Most filename cleaners either require configuration (detox needs `.detoxrc` sequence files) or only work as libraries (python-slugify, sanitize-filename). General-purpose renamers like `rename` require writing Perl expressions for every invocation. `sanitize` is opinionated by design: zero flags needed for the common case, predictable output, safe defaults.
+
+### What it does
+
+Lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims ends. Output is restricted to `[a-z0-9-]` for strings and `[a-z0-9.-]` for filenames. 80+ special-case transliterations handle characters that don't NFD-decompose (ł→l, ß→ss, ø→o, æ→ae, œ→oe, and many more).
+
+Every output is validated against a strict postcondition before being returned. If the pipeline produces any disallowed character, the tool returns an error rather than silently passing through an unsafe result.
 
 ## Installation
 
@@ -350,34 +360,37 @@ The man page is also included in goreleaser archives.
 
 ## Comparison with similar tools
 
-| Tool | Language | What it does | File rename | Recursive | Dry run |
+| | sanitize | [detox](https://github.com/dharple/detox) | [rename](https://metacpan.org/pod/File::Rename) | [slugify](https://github.com/benlinton/slugify) | [python-slugify](https://pypi.org/project/python-slugify/) |
 |---|---|---|---|---|---|
-| **sanitize** | Go | Opinionated filename sanitizer (lowercase, strip diacritics, Latin-only) | Yes (`-f`, `san`) | Yes (`-r`) | Yes (`-n`) |
-| **[detox](https://github.com/dharple/detox)** | C | Configurable filename cleanup via sequence files (`.detoxrc`) | Yes | Yes | Yes |
-| **[rename/prename](https://metacpan.org/pod/File::Rename)** | Perl | General-purpose renamer using Perl expressions | Yes | No | Yes |
-| **[slugify](https://github.com/benlinton/slugify)** (various) | Bash/Python/Node | String-to-slug conversion | Varies | No | No |
-| **[convmv](https://www.j3e.de/linux/convmv/)** | Perl | Filename *encoding* conversion (e.g., ISO-8859-1 to UTF-8) | Yes | Yes | Yes |
-| **[mmv](https://github.com/itchyny/mmv)** | C | Batch rename with wildcard patterns | Yes | No | No |
-| **[vidir](https://joeyh.name/code/moreutils/)** | Perl | Interactive rename in `$EDITOR` | Yes | No | N/A |
-| **go-slugify, gosimple/slug** | Go | URL slug generation | No (library only) | No | No |
-| **filenamify, sanitize-filename** (npm) | JS | Strip OS-illegal characters | No (library only) | No | No |
-| **python-slugify** (pip) | Python | Transliteration via text-unidecode | Minimal CLI | No | No |
+| **Language** | Go | C | Perl | Bash/Python/Node | Python |
+| **Approach** | Zero-config, opinionated | Configurable (`.detoxrc`) | Perl expressions | String-to-slug | text-unidecode |
+| **Config required** | No | Yes | Yes (per invocation) | No | No |
+| **File rename** | Yes (`-f`, `san`) | Yes | Yes | Varies | Minimal CLI |
+| **Recursive** | Yes (`-r`) | Yes | No | No | No |
+| **Dry run** | Yes (`-n`) | Yes | Yes | No | No |
+| **Null-delimited I/O** | Yes (`-0`) | No | No | No | No |
+| **Latin-only output** | Yes | No | No | No | No |
+| **Diacritic handling** | NFD + 80+ special cases | Configurable sequences | Manual | Basic | text-unidecode |
+| **Postcondition check** | Yes | No | No | No | No |
+| **Dependencies** | None (static binary) | C library | Perl | Varies | Python + pip |
+
+Also in the space: [convmv](https://www.j3e.de/linux/convmv/) (encoding conversion, not content), [mmv](https://github.com/itchyny/mmv) (batch wildcard rename), [vidir](https://joeyh.name/code/moreutils/) (interactive rename in `$EDITOR`), [go-slugify](https://github.com/gosimple/slug) / [filenamify](https://www.npmjs.com/package/filenamify) (libraries, no CLI).
 
 ### How sanitize differs
 
-**Closest competitor is detox**, which also cleans filenames, transliterates UTF-8, and has recursive + dry-run modes. detox is more configurable (sequence files), but `sanitize` is zero-config, restricts output to Latin script, and handles special cases (Polish `ł`, German `ß`, Danish `ø`/`æ`, French `œ`, Croatian `đ`, Maltese `ħ`, Turkish `ı`) via NFD decomposition + a `specialCases` replacement table.
+**Closest competitor is detox**, which also cleans filenames, transliterates UTF-8, and has recursive + dry-run modes. detox is more configurable (sequence files), but `sanitize` is zero-config, restricts output to Latin script, and handles special cases (Polish ł, German ß, Danish ø/æ, French œ, Croatian đ, Maltese ħ, Turkish ı) via NFD decomposition + a dedicated replacement table.
 
 **rename/prename** is far more powerful but requires writing Perl expressions -- it's a general renamer, not a sanitizer. `sanitize` trades flexibility for zero-config simplicity.
 
-**slugify scripts** are the closest conceptual match, but are typically string-only transformers with no file operations, recursion, or null-delimited I/O.
+**slugify tools** are the closest conceptual match, but are typically string-only transformers with no file operations, recursion, or null-delimited I/O.
 
 ### What sanitize offers that others don't
 
 - **Zero-config opinionated pipeline** -- no regex, config files, or flags needed for the common case
-- **Latin-script-only output** -- unique among these tools; non-Latin characters (Chinese, Cyrillic, Arabic) are stripped
+- **Latin-script-only output** -- unique among these tools; non-Latin characters (Chinese, Cyrillic, Arabic) are stripped rather than passed through
+- **Postcondition validation** -- every output is verified against `[a-z0-9-]` before returning; failures produce a diagnostic error, not silent corruption
 - **Special-case diacritics** -- 80+ standalone Latin characters that don't NFD-decompose are handled via a dedicated replacement table covering Western/Central European, Icelandic, Sami, Dutch, African languages, Croatian digraphs, and typographic ligatures
-- **Single static binary** -- Go, no runtime dependencies, cross-platform
-- **Full CLI integration** -- `-f` file rename, `-r` recursive, `-n` dry run, `-0` null-delimited stdin, `san` symlink, POSIX-compliant flags
+- **Single static binary** -- Go, no runtime dependencies, cross-platform builds via goreleaser
 
 ### What others offer that sanitize doesn't
 
