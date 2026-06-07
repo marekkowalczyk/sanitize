@@ -80,6 +80,31 @@ Open questions:
 - Could this be a build-time flag instead of runtime (bake the choice into the binary)?
 - Is there a simpler design — e.g., only transliterate Latin-script characters (the original scope) and leave symbols as hyphens, making the "extended" set opt-in?
 
+## Refactor pipeline from nested calls to sequential assignment
+
+**Priority: low.** The current pipeline is a deeply nested function composition:
+
+```go
+result := trimEnds(dedupHyp(replaceNonAlphaNum(toLower(removeAccents(removeIllFormed(input))))))
+```
+
+This is compact but hard to read at 6 levels deep, hard to debug (can't inspect intermediate values), and will get worse if a 7th stage is added. Replace with sequential assignment:
+
+```go
+s := removeIllFormed(input)
+s = removeAccents(s)
+s = toLower(s)
+s = replaceNonAlphaNum(s)
+s = dedupHyp(s)
+s = trimEnds(s)
+```
+
+Alternatives considered and rejected:
+- **Slice of functions + loop** (`[]func(string) string`): adds indirection for only 6 steps — not enough to justify the abstraction.
+- **`transform.Chain`** from `golang.org/x/text/transform`: only works with `transform.Transformer` interface types; our functions are plain `string→string`, so adapters would be needed. Not worth it.
+
+Sequential assignment is the most Go-idiomatic, trivial to step through in a debugger, and makes it obvious where to insert a debug print.
+
 ## Shell completions (bash/zsh)
 
 Hand-written completion scripts for bash and zsh. Only 5 flags so it's simple, but improves discoverability. Could be installed manually or shipped with goreleaser. Inspired by Chapter 6 of *Small, Sharp Software Tools*.
