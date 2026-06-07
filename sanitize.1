@@ -111,7 +111,7 @@ Lowercase the entire string.
 .B removeAccents
 NFD decomposition followed by removal of combining marks (Unicode Mn category).
 Characters that don't NFD-decompose are handled via a special-cases
-table (80+ entries, sourced from Unicode CLDR Latin-ASCII, AnyAscii,
+table (185 entries, sourced from Unicode CLDR Latin-ASCII, AnyAscii,
 and Unidecode) covering: Western/Central European
 .RI ( \[/l] ", " \[ss] ", " \[d-] ", " \[/o] ", " \[ae] ", " \[oe] ", "
 h-bar, dotless-i),
@@ -122,7 +122,11 @@ Catalan (middle-dot L),
 African languages (schwa, open-E, open-O, hooked B/D/K/F, esh, ezh,
 and more),
 Croatian digraphs (dz, lj, nj),
-and typographic ligatures (ff, fi, fl, ffi, ffl, st).
+typographic ligatures (ff, fi, fl, ffi, ffl, st),
+Roman numerals, super/subscript digits, vulgar fractions,
+letterlike symbols (numero, trademark, micro),
+currency symbols (euro, pound, yen, bitcoin),
+and common signs (copyright, registered, section, degree, multiplication).
 .TP
 .B replaceNonAlphaNum
 Replace anything outside

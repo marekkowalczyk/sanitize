@@ -14,7 +14,7 @@ Most filename cleaners either require configuration (detox needs `.detoxrc` sequ
 
 ### What it does
 
-Lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims ends. Output is restricted to `[a-z0-9-]` for strings and `[a-z0-9.-]` for filenames. 80+ special-case transliterations handle characters that don't NFD-decompose (ł→l, ß→ss, ø→o, æ→ae, œ→oe, and many more).
+Lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims ends. Output is restricted to `[a-z0-9-]` for strings and `[a-z0-9.-]` for filenames. 185 special-case transliterations handle characters that don't NFD-decompose (ł→l, ß→ss, ø→o, æ→ae, œ→oe, and many more).
 
 Every output is validated against a strict postcondition before being returned. If the pipeline produces any disallowed character, the tool returns an error rather than silently passing through an unsafe result.
 
@@ -126,7 +126,7 @@ input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> de
 
 1. **removeIllFormed** -- replace ill-formed UTF-8 sequences
 2. **toLower** -- lowercase the entire string
-3. **removeAccents** -- NFD decomposition + strip combining marks (unicode.Mn), plus special-case replacements for standalone characters that don't decompose (`ł` -> `l`, `ß` -> `ss`)
+3. **removeAccents** -- NFD decomposition + strip combining marks (unicode.Mn), plus special-case replacements for standalone characters that don't decompose (`ł` -> `l`, `ß` -> `ss`, `№` -> `no`, `€` -> `eur`, etc.)
 4. **replaceNonAlphaNum** -- replace anything outside `unicode.Latin` and digits with `-`
 5. **dedupHyp** -- collapse runs of `--` into a single `-`
 6. **trimEnds** -- strip leading/trailing non-Latin, non-digit characters
@@ -144,7 +144,7 @@ This is achieved by Unicode NFD decomposition followed by removal of [Mark, Nons
 
 ### Special cases
 
-Some characters are standalone Latin letters that don't decompose into base + combining mark. These are handled via a `specialCases` table (80+ entries, sourced from Unicode CLDR Latin-ASCII, AnyAscii, and Unidecode) with direct string replacement:
+Some characters are standalone Latin letters that don't decompose into base + combining mark. These are handled via a `specialCases` table (185 entries, sourced from Unicode CLDR Latin-ASCII, AnyAscii, and Unidecode) with direct string replacement:
 
 | Character | Replacement | Language/Use |
 |---|---|---|
@@ -370,7 +370,7 @@ The man page is also included in goreleaser archives.
 | **Dry run** | Yes (`-n`) | Yes | Yes | No | No |
 | **Null-delimited I/O** | Yes (`-0`) | No | No | No | No |
 | **Latin-only output** | Yes | No | No | No | No |
-| **Diacritic handling** | NFD + 80+ special cases | Configurable sequences | Manual | Basic | text-unidecode |
+| **Diacritic handling** | NFD + 185 special cases | Configurable sequences | Manual | Basic | text-unidecode |
 | **Postcondition check** | Yes | No | No | No | No |
 | **Dependencies** | None (static binary) | C library | Perl | Varies | Python + pip |
 
@@ -389,7 +389,7 @@ Also in the space: [convmv](https://www.j3e.de/linux/convmv/) (encoding conversi
 - **Zero-config opinionated pipeline** -- no regex, config files, or flags needed for the common case
 - **Latin-script-only output** -- unique among these tools; non-Latin characters (Chinese, Cyrillic, Arabic) are stripped rather than passed through
 - **Postcondition validation** -- every output is verified against `[a-z0-9-]` before returning; failures produce a diagnostic error, not silent corruption
-- **Special-case diacritics** -- 80+ standalone Latin characters that don't NFD-decompose are handled via a dedicated replacement table covering Western/Central European, Icelandic, Sami, Dutch, African languages, Croatian digraphs, and typographic ligatures
+- **Special-case transliterations** -- 185 entries covering standalone Latin characters, Roman numerals, super/subscript digits, vulgar fractions, letterlike symbols (№, ™, µ), currency symbols (€, £, ¥), and common signs (©, ®, §, °, ×)
 - **Single static binary** -- Go, no runtime dependencies, cross-platform builds via goreleaser
 
 ### What others offer that sanitize doesn't

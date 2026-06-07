@@ -1172,6 +1172,61 @@ func TestSanitize(t *testing.T) {
 		{"email subject", "Re: Fwd: Important!!! (Action Required)", "re-fwd-important-action-required"},
 		{"code identifier", "myFunction_name.test", "myfunction-name-test"},
 		{"version string", "v2.1.0-beta.1", "v2-1-0-beta-1"},
+
+		// Roman numerals
+		{"roman numeral upper", "Chapter Ⅲ", "chapter-iii"},
+		{"roman numeral lower", "part ⅳ", "part-iv"},
+		{"roman numeral XII", "Ⅻ", "xii"},
+		{"roman numeral large", "Ⅿ", "m"},
+		{"roman numeral combo", "Ⅸ Symphonies", "ix-symphonies"},
+
+		// Ordinal indicators
+		{"feminine ordinal", "1ª edición", "1a-edicion"},
+		{"masculine ordinal", "2º andar", "2o-andar"},
+
+		// Superscript letters
+		{"superscript i", "xⁱ", "xi"},
+		{"superscript n", "xⁿ", "xn"},
+
+		// Superscript digits
+		{"superscript 2", "m²", "m2"},
+		{"superscript 3", "m³", "m3"},
+		{"superscript 1", "x¹", "x1"},
+		{"superscript 0", "x⁰", "x0"},
+
+		// Subscript digits
+		{"subscript H2O", "H₂O", "h2o"},
+		{"subscript CO2", "CO₂", "co2"},
+
+		// Vulgar fractions (/ becomes - in pipeline)
+		{"half", "½ price", "1-2-price"},
+		{"quarter", "¼ cup", "1-4-cup"},
+		{"three quarters", "¾", "3-4"},
+		{"one third", "⅓", "1-3"},
+
+		// Letterlike symbols
+		{"numero", "Recipe №5", "recipe-no5"},
+		{"trademark", "Widget™", "widgettm"},
+		{"micro", "100µm", "100um"},
+		{"multiplication", "1920×1080", "1920x1080"},
+
+		// Currency symbols
+		{"euro", "€100", "eur100"},
+		{"pound", "£50", "gbp50"},
+		{"yen", "¥1000", "y1000"},
+		{"cent", "50¢", "50c"},
+		{"bitcoin", "₿1", "btc1"},
+
+		// Other symbols
+		{"copyright", "©2024", "c2024"},
+		{"registered", "Brand®", "brandr"},
+		{"section", "§42", "s42"},
+		{"degree", "90°", "90deg"},
+		{"celsius", "37℃", "37c"},
+		{"fahrenheit", "98℉", "98f"},
+		{"liter", "2ℓ", "2l"},
+		{"plus minus", "±5", "pm5"},
+		{"service mark", "App℠", "appsm"},
 	}
 
 	for _, tt := range tests {

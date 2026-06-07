@@ -97,6 +97,76 @@ var specialCases = []struct{ from, to string }{
 	{"ﬄ", "ffl"}, // ffl
 	{"ﬅ", "st"}, // long-s t
 	{"ﬆ", "st"}, // st
+
+	// --- Roman numerals (U+2160–U+217F) ---
+	// These are unicode.Latin but not ASCII, causing postcondition failures.
+	{"Ⅰ", "I"}, {"Ⅱ", "II"}, {"Ⅲ", "III"}, {"Ⅳ", "IV"},
+	{"Ⅴ", "V"}, {"Ⅵ", "VI"}, {"Ⅶ", "VII"}, {"Ⅷ", "VIII"},
+	{"Ⅸ", "IX"}, {"Ⅹ", "X"}, {"Ⅺ", "XI"}, {"Ⅻ", "XII"},
+	{"Ⅼ", "L"}, {"Ⅽ", "C"}, {"Ⅾ", "D"}, {"Ⅿ", "M"},
+	{"ⅰ", "i"}, {"ⅱ", "ii"}, {"ⅲ", "iii"}, {"ⅳ", "iv"},
+	{"ⅴ", "v"}, {"ⅵ", "vi"}, {"ⅶ", "vii"}, {"ⅷ", "viii"},
+	{"ⅸ", "ix"}, {"ⅹ", "x"}, {"ⅺ", "xi"}, {"ⅻ", "xii"},
+	{"ⅼ", "l"}, {"ⅽ", "c"}, {"ⅾ", "d"}, {"ⅿ", "m"},
+
+	// --- Ordinal indicators ---
+	// unicode.Latin, common in Spanish/Portuguese/Italian filenames.
+	{"ª", "a"}, // feminine ordinal (U+00AA)
+	{"º", "o"}, // masculine ordinal (U+00BA)
+
+	// --- Superscript letters ---
+	// unicode.Latin but not ASCII.
+	{"ⁱ", "i"}, // superscript i (U+2071)
+	{"ⁿ", "n"}, // superscript n (U+207F)
+
+	// --- Superscript digits (U+2070, U+00B9, U+00B2–U+00B3, U+2074–U+2079) ---
+	{"⁰", "0"}, {"¹", "1"}, {"²", "2"}, {"³", "3"},
+	{"⁴", "4"}, {"⁵", "5"}, {"⁶", "6"}, {"⁷", "7"},
+	{"⁸", "8"}, {"⁹", "9"},
+
+	// --- Subscript digits (U+2080–U+2089) ---
+	{"₀", "0"}, {"₁", "1"}, {"₂", "2"}, {"₃", "3"},
+	{"₄", "4"}, {"₅", "5"}, {"₆", "6"}, {"₇", "7"},
+	{"₈", "8"}, {"₉", "9"},
+
+	// --- Vulgar fractions ---
+	// The / becomes - via replaceNonAlphaNum, so ½ → "1/2" → "1-2".
+	{"¼", "1/4"}, {"½", "1/2"}, {"¾", "3/4"},
+	{"⅓", "1/3"}, {"⅔", "2/3"},
+	{"⅕", "1/5"}, {"⅖", "2/5"}, {"⅗", "3/5"}, {"⅘", "4/5"},
+	{"⅙", "1/6"}, {"⅚", "5/6"},
+	{"⅛", "1/8"}, {"⅜", "3/8"}, {"⅝", "5/8"}, {"⅞", "7/8"},
+
+	// --- Letterlike symbols ---
+	{"№", "no"},  // numero sign (U+2116)
+	{"™", "tm"},  // trademark (U+2122)
+	{"℠", "sm"},  // service mark (U+2120)
+	{"℃", "c"},   // degree Celsius (U+2103)
+	{"℉", "f"},   // degree Fahrenheit (U+2109)
+	{"ℓ", "l"},   // script small l / liter (U+2113)
+	{"µ", "u"},   // micro sign (U+00B5, not Greek mu)
+
+	// --- Common symbols ---
+	{"©", "c"},   // copyright (U+00A9)
+	{"®", "r"},   // registered (U+00AE)
+	{"§", "s"},   // section sign (U+00A7)
+	{"°", "deg"}, // degree sign (U+00B0)
+	{"¶", "p"},   // pilcrow / paragraph (U+00B6)
+	{"×", "x"},   // multiplication sign (U+00D7)
+	{"÷", "div"}, // division sign (U+00F7)
+	{"±", "pm"},  // plus-minus (U+00B1)
+
+	// --- Currency symbols ---
+	{"¢", "c"},    // cent (U+00A2)
+	{"£", "gbp"},  // pound (U+00A3)
+	{"¥", "y"},    // yen/yuan (U+00A5)
+	{"€", "eur"},  // euro (U+20AC)
+	{"₹", "rs"},   // Indian rupee (U+20B9)
+	{"₽", "r"},    // Russian ruble (U+20BD)
+	{"₩", "w"},    // Korean won (U+20A9)
+	{"₦", "n"},    // Nigerian naira (U+20A6)
+	{"₺", "tl"},   // Turkish lira (U+20BA)
+	{"₿", "btc"},  // Bitcoin (U+20BF)
 }
 
 var (
