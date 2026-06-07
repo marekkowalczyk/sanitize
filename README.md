@@ -14,7 +14,9 @@ Most filename cleaners either require configuration (detox needs `.detoxrc` sequ
 
 ### What it does
 
-Lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims ends. Output is restricted to `[a-z0-9-]` for strings and `[a-z0-9.-]` for filenames. 185 special-case transliterations handle characters that don't NFD-decompose (ł→l, ß→ss, ø→o, æ→ae, œ→oe, and many more).
+The intent is to be a **failsafe**: every Latin or Latin-adjacent character should produce a reasonable ASCII output -- never silently vanish and never cause an error. If a character has a conventional Latin transliteration, `sanitize` should handle it.
+
+Lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims ends. Output is restricted to `[a-z0-9-]` for strings and `[a-z0-9.-]` for filenames. 185 special-case transliterations handle characters that don't NFD-decompose (ł→l, ß→ss, ø→o, æ→ae, œ→oe, №→no, €→eur, and many more). The complete table is published at [`references/transliterations.csv`](references/transliterations.csv).
 
 Every output is validated against a strict postcondition before being returned. If the pipeline produces any disallowed character, the tool returns an error rather than silently passing through an unsafe result.
 
@@ -144,7 +146,7 @@ This is achieved by Unicode NFD decomposition followed by removal of [Mark, Nons
 
 ### Special cases
 
-Some characters are standalone Latin letters that don't decompose into base + combining mark. These are handled via a `specialCases` table (185 entries, sourced from Unicode CLDR Latin-ASCII, AnyAscii, and Unidecode) with direct string replacement:
+Some characters are standalone Latin letters that don't decompose into base + combining mark. These are handled via a `specialCases` table (185 entries, sourced from Unicode CLDR Latin-ASCII, AnyAscii, and Unidecode) with direct string replacement. The complete table with final (lowercased) outputs is at [`references/transliterations.csv`](references/transliterations.csv) (auto-generated from source; run `GENERATE=1 go test -run TestGenerateTransliterations` to regenerate). Examples:
 
 | Character | Replacement | Language/Use |
 |---|---|---|

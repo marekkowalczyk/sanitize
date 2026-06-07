@@ -1,0 +1,186 @@
+character,codepoint,output,name
+ł,U+0142,l,Latin Small Letter L with Stroke
+Ł,U+0141,l,Latin Capital Letter L with Stroke
+ß,U+00DF,ss,Latin Small Letter Sharp S
+ẞ,U+1E9E,ss,Latin Capital Letter Sharp S
+đ,U+0111,d,Latin Small Letter D with Stroke
+Đ,U+0110,d,Latin Capital Letter D with Stroke
+ø,U+00F8,o,Latin Small Letter O with Stroke
+Ø,U+00D8,o,Latin Capital Letter O with Stroke
+æ,U+00E6,ae,Latin Small Letter Ae
+Æ,U+00C6,ae,Latin Capital Letter Ae
+œ,U+0153,oe,Latin Small Ligature Oe
+Œ,U+0152,oe,Latin Capital Ligature Oe
+ħ,U+0127,h,Latin Small Letter H with Stroke
+Ħ,U+0126,h,Latin Capital Letter H with Stroke
+ı,U+0131,i,Latin Small Letter Dotless I
+þ,U+00FE,th,Latin Small Letter Thorn
+Þ,U+00DE,th,Latin Capital Letter Thorn
+ð,U+00F0,d,Latin Small Letter Eth
+Ð,U+00D0,d,Latin Capital Letter Eth
+ŋ,U+014B,ng,Latin Small Letter Eng
+Ŋ,U+014A,ng,Latin Capital Letter Eng
+ŧ,U+0167,t,Latin Small Letter T with Stroke
+Ŧ,U+0166,t,Latin Capital Letter T with Stroke
+ĳ,U+0133,ij,Latin Small Ligature Ij
+Ĳ,U+0132,ij,Latin Capital Ligature Ij
+ŀ,U+0140,l,Latin Small Letter L with Middle Dot
+Ŀ,U+013F,l,Latin Capital Letter L with Middle Dot
+ĸ,U+0138,k,Latin Small Letter Kra
+ſ,U+017F,s,Latin Small Letter Long S
+ŉ,U+0149,n,Latin Small Letter N Preceded by Apostrophe
+ƕ,U+0195,hv,Latin Small Letter Hv
+Ƕ,U+01F6,hv,Latin Capital Letter Hwair
+ⱥ,U+2C65,a,Latin Small Letter A with Stroke
+Ⱥ,U+023A,a,Latin Capital Letter A with Stroke
+ə,U+0259,e,Latin Small Letter Schwa
+Ə,U+018F,e,Latin Capital Letter Schwa
+ɛ,U+025B,e,Latin Small Letter Open E
+Ɛ,U+0190,e,Latin Capital Letter Open E
+ɔ,U+0254,o,Latin Small Letter Open O
+Ɔ,U+0186,o,Latin Capital Letter Open O
+ɓ,U+0253,b,Latin Small Letter B with Hook
+Ɓ,U+0181,b,Latin Capital Letter B with Hook
+ɗ,U+0257,d,Latin Small Letter D with Hook
+Ɗ,U+018A,d,Latin Capital Letter D with Hook
+ɖ,U+0256,d,Latin Small Letter D with Tail
+Ɖ,U+0189,d,Latin Capital Letter D with Tail
+ƙ,U+0199,k,Latin Small Letter K with Hook
+Ƙ,U+0198,k,Latin Capital Letter K with Hook
+ƒ,U+0192,f,Latin Small Letter F with Hook
+Ƒ,U+0191,f,Latin Capital Letter F with Hook
+ɲ,U+0272,n,Latin Small Letter N with Left Hook
+Ɲ,U+019D,n,Latin Capital Letter N with Left Hook
+ɨ,U+0268,i,Latin Small Letter I with Stroke
+Ɨ,U+0197,i,Latin Capital Letter I with Stroke
+ʉ,U+0289,u,Latin Small Letter U Bar
+Ʉ,U+0244,u,Latin Capital Letter U Bar
+ʊ,U+028A,u,Latin Small Letter Upsilon
+Ʊ,U+01B1,u,Latin Capital Letter Upsilon
+ʋ,U+028B,v,Latin Small Letter V with Hook
+Ʋ,U+01B2,v,Latin Capital Letter V with Hook
+ƴ,U+01B4,y,Latin Small Letter Y with Hook
+Ƴ,U+01B3,y,Latin Capital Letter Y with Hook
+ƶ,U+01B6,z,Latin Small Letter Z with Stroke
+Ƶ,U+01B5,z,Latin Capital Letter Z with Stroke
+ʃ,U+0283,sh,Latin Small Letter Esh
+Ʃ,U+01A9,sh,Latin Capital Letter Esh
+ʒ,U+0292,zh,Latin Small Letter Ezh
+Ʒ,U+01B7,zh,Latin Capital Letter Ezh
+ǝ,U+01DD,e,Latin Small Letter Turned E
+Ǝ,U+018E,e,Latin Capital Letter Reversed E
+Ǆ,U+01C4,dz,Latin Capital Letter Dz with Caron
+ǅ,U+01C5,dz,Latin Capital Letter D with Small Letter Z with Caron
+ǆ,U+01C6,dz,Latin Small Letter Dz with Caron
+Ǉ,U+01C7,lj,Latin Capital Letter Lj
+ǈ,U+01C8,lj,Latin Capital Letter L with Small Letter J
+ǉ,U+01C9,lj,Latin Small Letter Lj
+Ǌ,U+01CA,nj,Latin Capital Letter Nj
+ǋ,U+01CB,nj,Latin Capital Letter N with Small Letter J
+ǌ,U+01CC,nj,Latin Small Letter Nj
+Ǳ,U+01F1,dz,Latin Capital Letter Dz
+ǲ,U+01F2,dz,Latin Capital Letter D with Small Letter Z
+ǳ,U+01F3,dz,Latin Small Letter Dz
+ﬀ,U+FB00,ff,Latin Small Ligature Ff
+ﬁ,U+FB01,fi,Latin Small Ligature Fi
+ﬂ,U+FB02,fl,Latin Small Ligature Fl
+ﬃ,U+FB03,ffi,Latin Small Ligature Ffi
+ﬄ,U+FB04,ffl,Latin Small Ligature Ffl
+ﬅ,U+FB05,st,Latin Small Ligature Long S T
+ﬆ,U+FB06,st,Latin Small Ligature St
+Ⅰ,U+2160,i,Roman Numeral One
+Ⅱ,U+2161,ii,Roman Numeral Two
+Ⅲ,U+2162,iii,Roman Numeral Three
+Ⅳ,U+2163,iv,Roman Numeral Four
+Ⅴ,U+2164,v,Roman Numeral Five
+Ⅵ,U+2165,vi,Roman Numeral Six
+Ⅶ,U+2166,vii,Roman Numeral Seven
+Ⅷ,U+2167,viii,Roman Numeral Eight
+Ⅸ,U+2168,ix,Roman Numeral Nine
+Ⅹ,U+2169,x,Roman Numeral Ten
+Ⅺ,U+216A,xi,Roman Numeral Eleven
+Ⅻ,U+216B,xii,Roman Numeral Twelve
+Ⅼ,U+216C,l,Roman Numeral Fifty
+Ⅽ,U+216D,c,Roman Numeral One Hundred
+Ⅾ,U+216E,d,Roman Numeral Five Hundred
+Ⅿ,U+216F,m,Roman Numeral One Thousand
+ⅰ,U+2170,i,Small Roman Numeral One
+ⅱ,U+2171,ii,Small Roman Numeral Two
+ⅲ,U+2172,iii,Small Roman Numeral Three
+ⅳ,U+2173,iv,Small Roman Numeral Four
+ⅴ,U+2174,v,Small Roman Numeral Five
+ⅵ,U+2175,vi,Small Roman Numeral Six
+ⅶ,U+2176,vii,Small Roman Numeral Seven
+ⅷ,U+2177,viii,Small Roman Numeral Eight
+ⅸ,U+2178,ix,Small Roman Numeral Nine
+ⅹ,U+2179,x,Small Roman Numeral Ten
+ⅺ,U+217A,xi,Small Roman Numeral Eleven
+ⅻ,U+217B,xii,Small Roman Numeral Twelve
+ⅼ,U+217C,l,Small Roman Numeral Fifty
+ⅽ,U+217D,c,Small Roman Numeral One Hundred
+ⅾ,U+217E,d,Small Roman Numeral Five Hundred
+ⅿ,U+217F,m,Small Roman Numeral One Thousand
+ª,U+00AA,a,Feminine Ordinal Indicator
+º,U+00BA,o,Masculine Ordinal Indicator
+ⁱ,U+2071,i,Superscript Latin Small Letter I
+ⁿ,U+207F,n,Superscript Latin Small Letter N
+⁰,U+2070,0,Superscript Zero
+¹,U+00B9,1,Superscript One
+²,U+00B2,2,Superscript Two
+³,U+00B3,3,Superscript Three
+⁴,U+2074,4,Superscript Four
+⁵,U+2075,5,Superscript Five
+⁶,U+2076,6,Superscript Six
+⁷,U+2077,7,Superscript Seven
+⁸,U+2078,8,Superscript Eight
+⁹,U+2079,9,Superscript Nine
+₀,U+2080,0,Subscript Zero
+₁,U+2081,1,Subscript One
+₂,U+2082,2,Subscript Two
+₃,U+2083,3,Subscript Three
+₄,U+2084,4,Subscript Four
+₅,U+2085,5,Subscript Five
+₆,U+2086,6,Subscript Six
+₇,U+2087,7,Subscript Seven
+₈,U+2088,8,Subscript Eight
+₉,U+2089,9,Subscript Nine
+¼,U+00BC,1/4,Vulgar Fraction One Quarter
+½,U+00BD,1/2,Vulgar Fraction One Half
+¾,U+00BE,3/4,Vulgar Fraction Three Quarters
+⅓,U+2153,1/3,Vulgar Fraction One Third
+⅔,U+2154,2/3,Vulgar Fraction Two Thirds
+⅕,U+2155,1/5,Vulgar Fraction One Fifth
+⅖,U+2156,2/5,Vulgar Fraction Two Fifths
+⅗,U+2157,3/5,Vulgar Fraction Three Fifths
+⅘,U+2158,4/5,Vulgar Fraction Four Fifths
+⅙,U+2159,1/6,Vulgar Fraction One Sixth
+⅚,U+215A,5/6,Vulgar Fraction Five Sixths
+⅛,U+215B,1/8,Vulgar Fraction One Eighth
+⅜,U+215C,3/8,Vulgar Fraction Three Eighths
+⅝,U+215D,5/8,Vulgar Fraction Five Eighths
+⅞,U+215E,7/8,Vulgar Fraction Seven Eighths
+№,U+2116,no,Numero Sign
+™,U+2122,tm,Trade Mark Sign
+℠,U+2120,sm,Service Mark
+℃,U+2103,c,Degree Celsius
+℉,U+2109,f,Degree Fahrenheit
+ℓ,U+2113,l,Script Small L
+µ,U+00B5,u,Micro Sign
+©,U+00A9,c,Copyright Sign
+®,U+00AE,r,Registered Sign
+§,U+00A7,s,Section Sign
+°,U+00B0,deg,Degree Sign
+¶,U+00B6,p,Pilcrow Sign
+×,U+00D7,x,Multiplication Sign
+÷,U+00F7,div,Division Sign
+±,U+00B1,pm,Plus-Minus Sign
+¢,U+00A2,c,Cent Sign
+£,U+00A3,gbp,Pound Sign
+¥,U+00A5,y,Yen Sign
+€,U+20AC,eur,Euro Sign
+₹,U+20B9,rs,Indian Rupee Sign
+₽,U+20BD,r,Ruble Sign
+₩,U+20A9,w,Won Sign
+₦,U+20A6,n,Naira Sign
+₺,U+20BA,tl,Turkish Lira Sign
+₿,U+20BF,btc,Bitcoin Sign
