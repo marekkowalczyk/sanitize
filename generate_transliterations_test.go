@@ -177,6 +177,9 @@ func unicodeName(r rune) string {
 		'¢': "Cent Sign", '£': "Pound Sign", '¥': "Yen Sign", '€': "Euro Sign",
 		'₹': "Indian Rupee Sign", '₽': "Ruble Sign", '₩': "Won Sign",
 		'₦': "Naira Sign", '₺': "Turkish Lira Sign", '₿': "Bitcoin Sign",
+		// ASCII symbols
+		'$': "Dollar Sign", '&': "Ampersand", '@': "Commercial At",
+		'%': "Percent Sign", '+': "Plus Sign",
 	}
 	if name, ok := names[r]; ok {
 		return name

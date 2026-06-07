@@ -4,7 +4,7 @@ Feature ideas for future versions.
 
 ## Special-case replacements: hardcoded, not configurable (decision)
 
-**Status: decided — keep hardcoded.** The special-case replacements (185 entries as of 2026-06-07, covering Western/Central European, Icelandic, Sami, Dutch, African languages, Croatian digraphs, typographic ligatures, Roman numerals, super/subscript digits, vulgar fractions, letterlike symbols, currency symbols, and common signs — sourced from Unicode CLDR Latin-ASCII, AnyAscii, and Unidecode) are linguistic facts, not preferences. A config file was considered and rejected:
+**Status: decided — keep hardcoded.** The special-case replacements (190 entries as of 2026-06-07, covering Western/Central European, Icelandic, Sami, Dutch, African languages, Croatian digraphs, typographic ligatures, Roman numerals, super/subscript digits, vulgar fractions, letterlike symbols, currency symbols, and common signs — sourced from Unicode CLDR Latin-ASCII, AnyAscii, and Unidecode) are linguistic facts, not preferences. A config file was considered and rejected:
 
 - The tool's core differentiator is zero-config, opinionated output. A config file would make output depend on external state, breaking reproducibility and composability.
 - The `specialCases` table in `sanitize.go` is visible, self-documenting, and trivial to extend — adding a new entry is one line of code plus a test case.

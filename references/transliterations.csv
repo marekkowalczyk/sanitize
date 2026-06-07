@@ -184,3 +184,8 @@ character,codepoint,name,output
 ₦,U+20A6,Naira Sign,n
 ₺,U+20BA,Turkish Lira Sign,tl
 ₿,U+20BF,Bitcoin Sign,btc
+$,U+0024,Dollar Sign,usd
+&,U+0026,Ampersand,and
+@,U+0040,Commercial At,at
+%,U+0025,Percent Sign,pct
++,U+002B,Plus Sign,plus

@@ -36,7 +36,7 @@ func TestCLIStdin(t *testing.T) {
 		{"multiple lines", "Hello World\nCafé Résumé\nŁódź\n", "hello-world\ncafe-resume\nlodz\n"},
 		{"blank lines skipped", "hello\n\nworld\n", "hello\nworld\n"},
 		{"trailing whitespace trimmed", "hello  \n", "hello\n"},
-		{"lines producing empty output skipped", "!!!\nhello\n@@@\n", "hello\n"},
+		{"lines producing empty output skipped", "!!!\nhello\n***\n", "hello\n"},
 		{"mixed real filenames", "Meeting Notes (2024).docx\nIMG_001.jpg\n", "meeting-notes-2024-docx\nimg-001-jpg\n"},
 	}
 
@@ -91,7 +91,7 @@ func TestCLIStdinNullDelimited(t *testing.T) {
 	}{
 		{"null separated", "Hello World\x00Café\x00", "hello-world\x00cafe\x00"},
 		{"skip empty segments", "hello\x00\x00world\x00", "hello\x00world\x00"},
-		{"skip segments that sanitize to empty", "!!!\x00hello\x00@@@\x00", "hello\x00"},
+		{"skip segments that sanitize to empty", "!!!\x00hello\x00***\x00", "hello\x00"},
 		{"filename with newline", "Hello\nWorld\x00foo\x00", "hello-world\x00foo\x00"},
 	}
 
@@ -1119,12 +1119,12 @@ func TestSanitize(t *testing.T) {
 		{"parentheses", "Hello (World)", "hello-world"},
 		{"brackets", "Hello [World]", "hello-world"},
 		{"curly braces", "Hello {World}", "hello-world"},
-		{"ampersand", "Rock & Roll", "rock-roll"},
-		{"at sign", "user@domain", "user-domain"},
+		{"ampersand", "Rock & Roll", "rock-and-roll"},
+		{"at sign", "user@domain", "user-at-domain"},
 		{"hash", "section#anchor", "section-anchor"},
-		{"dollar", "price$100", "price-100"},
-		{"percent", "100% done", "100-done"},
-		{"plus", "a + b", "a-b"},
+		{"dollar", "price$100", "price-usd-100"},
+		{"percent", "100% done", "100pct-done"},
+		{"plus", "a + b", "a-plus-b"},
 		{"equals", "a = b", "a-b"},
 		{"pipe", "a | b", "a-b"},
 		{"colon", "key: value", "key-value"},
@@ -1138,7 +1138,7 @@ func TestSanitize(t *testing.T) {
 		{"caret", "a^b", "a-b"},
 
 		// Hyphen deduplication
-		{"adjacent special chars", "a@#$b", "a-b"},
+		{"adjacent special chars", "a@#$b", "a-at-usd-b"},
 		{"run of punctuation", "hello!!!world", "hello-world"},
 		{"mixed separators", "a - b - c", "a-b-c"},
 		{"existing hyphens preserved", "already-hyphenated", "already-hyphenated"},
@@ -1157,7 +1157,7 @@ func TestSanitize(t *testing.T) {
 		{"single char", "A", "a"},
 		{"single digit", "7", "7"},
 		{"only spaces", "     ", ""},
-		{"only punctuation", "!@#$%^&*()", ""},
+		{"only punctuation", "!@#$%^&*()", "at-usd-pct-and"},
 		{"only hyphens", "-----", ""},
 		{"single hyphen", "-", ""},
 		{"very long input", "This Is A Very Long Title That Someone Might Use For A Document Name In The Year 2024",
@@ -1227,6 +1227,12 @@ func TestSanitize(t *testing.T) {
 		{"liter", "2ℓ", "2l"},
 		{"plus minus", "±5", "pm5"},
 		{"service mark", "App℠", "appsm"},
+
+		// ASCII symbols with semantic transliterations
+		{"dollar leading", "$100", "usd-100"},
+		{"ampersand adjacent", "AT&T", "at-and-t"},
+		{"at sign context", "Meeting @ 3pm", "meeting-at-3pm"},
+		{"plus repeated", "C++", "c-plus-plus"},
 	}
 
 	for _, tt := range tests {

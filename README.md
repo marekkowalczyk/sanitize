@@ -16,7 +16,7 @@ Most filename cleaners either require configuration (detox needs `.detoxrc` sequ
 
 The intent is to be a **failsafe**: every Latin or Latin-adjacent character should produce a reasonable ASCII output -- never silently vanish and never cause an error. If a character has a conventional Latin transliteration, `sanitize` should handle it.
 
-Lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims ends. Output is restricted to `[a-z0-9-]` for strings and `[a-z0-9.-]` for filenames. 185 special-case transliterations handle characters that don't NFD-decompose (ł→l, ß→ss, ø→o, æ→ae, œ→oe, №→no, €→eur, and many more). The complete table is published at [`references/transliterations.csv`](references/transliterations.csv).
+Lowercases, strips diacritics, replaces non-alphanumeric characters with hyphens, deduplicates hyphens, and trims ends. Output is restricted to `[a-z0-9-]` for strings and `[a-z0-9.-]` for filenames. 190 special-case transliterations handle characters that don't NFD-decompose (ł→l, ß→ss, ø→o, æ→ae, œ→oe, №→no, €→eur, and many more). The complete table is published at [`references/transliterations.csv`](references/transliterations.csv).
 
 Every output is validated against a strict postcondition before being returned. If the pipeline produces any disallowed character, the tool returns an error rather than silently passing through an unsafe result.
 
@@ -146,7 +146,7 @@ This is achieved by Unicode NFD decomposition followed by removal of [Mark, Nons
 
 ### Special cases
 
-Some characters are standalone Latin letters that don't decompose into base + combining mark. These are handled via a `specialCases` table (185 entries, sourced from Unicode CLDR Latin-ASCII, AnyAscii, and Unidecode) with direct string replacement. The complete table with final (lowercased) outputs is at [`references/transliterations.csv`](references/transliterations.csv) (auto-generated from source; run `GENERATE=1 go test -run TestGenerateTransliterations` to regenerate). Examples:
+Some characters are standalone Latin letters that don't decompose into base + combining mark. These are handled via a `specialCases` table (190 entries, sourced from Unicode CLDR Latin-ASCII, AnyAscii, and Unidecode) with direct string replacement. The complete table with final (lowercased) outputs is at [`references/transliterations.csv`](references/transliterations.csv) (auto-generated from source; run `GENERATE=1 go test -run TestGenerateTransliterations` to regenerate). Examples:
 
 | Character | Replacement | Language/Use |
 |---|---|---|
@@ -372,7 +372,7 @@ The man page is also included in goreleaser archives.
 | **Dry run** | Yes (`-n`) | Yes | Yes | No | No |
 | **Null-delimited I/O** | Yes (`-0`) | No | No | No | No |
 | **Latin-only output** | Yes | No | No | No | No |
-| **Diacritic handling** | NFD + 185 special cases | Configurable sequences | Manual | Basic | text-unidecode |
+| **Diacritic handling** | NFD + 190 special cases | Configurable sequences | Manual | Basic | text-unidecode |
 | **Postcondition check** | Yes | No | No | No | No |
 | **Dependencies** | None (static binary) | C library | Perl | Varies | Python + pip |
 
@@ -391,7 +391,7 @@ Also in the space: [convmv](https://www.j3e.de/linux/convmv/) (encoding conversi
 - **Zero-config opinionated pipeline** -- no regex, config files, or flags needed for the common case
 - **Latin-script-only output** -- unique among these tools; non-Latin characters (Chinese, Cyrillic, Arabic) are stripped rather than passed through
 - **Postcondition validation** -- every output is verified against `[a-z0-9-]` before returning; failures produce a diagnostic error, not silent corruption
-- **Special-case transliterations** -- 185 entries covering standalone Latin characters, Roman numerals, super/subscript digits, vulgar fractions, letterlike symbols (№, ™, µ), currency symbols (€, £, ¥), and common signs (©, ®, §, °, ×)
+- **Special-case transliterations** -- 190 entries covering standalone Latin characters, Roman numerals, super/subscript digits, vulgar fractions, letterlike symbols (№, ™, µ), currency symbols (€, £, ¥), common signs (©, ®, §, °, ×), and ASCII symbols with semantic meaning ($→usd, &→and, @→at, %→pct, +→plus)
 - **Single static binary** -- Go, no runtime dependencies, cross-platform builds via goreleaser
 
 ### What others offer that sanitize doesn't

@@ -302,12 +302,12 @@ func TestSanitizeAdversarial(t *testing.T) {
 		{
 			name:  "Hyphens: Non-alphanumeric conversion creating duplicates",
 			input: "foo#$@bar",
-			want:  "foo-bar",
+			want:  "foo-usd-at-bar",
 		},
 		{
 			name:  "Hyphens: Leading and trailing non-alphanumerics trimmed",
 			input: "$foo$",
-			want:  "foo",
+			want:  "usd-foo-usd",
 		},
 		{
 			name:  "Hyphens: Single hyphen input",
@@ -520,7 +520,7 @@ func TestSanitizeFilenameAdversarial(t *testing.T) {
 		{
 			name:  "Filename: Invalid characters in extension",
 			input: "file.t*x&t",
-			want:  "file.t-x-t",
+			want:  "file.t-x-and-t",
 		},
 		{
 			name:  "Filename: Adversarial null bytes in base name",

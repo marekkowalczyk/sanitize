@@ -167,6 +167,26 @@ var specialCases = []struct{ from, to string }{
 	{"₦", "N"},    // Nigerian naira (U+20A6)
 	{"₺", "TL"},   // Turkish lira (U+20BA)
 	{"₿", "BTC"},  // Bitcoin (U+20BF)
+
+	// --- ASCII symbols with semantic meaning ---
+	// These are plain ASCII characters that carry meaning beyond punctuation.
+	// Without transliteration they become hyphens and the meaning is lost
+	// (e.g., "Rock & Roll" → "rock-roll" vs "rock-and-roll").
+	//
+	// Rejected candidates (just become hyphens, which is correct):
+	//   #  — ambiguous: "number", "hash", "sharp", "pound" depending on context
+	//   ~  — rarely semantic in filenames ("~user" is a path, not content)
+	//   *  — too rare as semantic content in filenames
+	//   ^  — no conventional word equivalent
+	//   =  — structural, not semantic
+	//   !  — emphasis/punctuation, not content
+	//   ?  — punctuation, not content
+	//   |  — structural separator
+	{"$", " USD "}, // dollar sign (spaces become hyphens via replaceNonAlphaNum)
+	{"&", " and "}, // ampersand (spaces become hyphens via replaceNonAlphaNum)
+	{"@", " at "},  // at sign
+	{"%", "pct"},   // percent sign
+	{"+", " plus "}, // plus sign
 }
 
 var (
