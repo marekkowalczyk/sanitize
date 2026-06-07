@@ -1,5 +1,42 @@
 # Changelog
 
+## v3.0.0 (2026-06-07)
+
+Expanded transliteration coverage from 100 to 190 special-case entries.
+Pipeline reordered for cleaner architecture.
+
+### Breaking changes
+
+- **ASCII symbols transliterated instead of stripped**: `$`→`usd`, `&`→`and`,
+  `@`→`at`, `%`→`pct`, `+`→`plus`. Previously these became hyphens (e.g.,
+  "Rock & Roll" was `rock-roll`, now `rock-and-roll`).
+- **Roman numerals transliterated**: `Ⅲ`→`iii`, `Ⅸ`→`ix`, etc. Previously
+  these caused postcondition failures (bug fix, but changes output).
+- **Ordinal indicators transliterated**: `ª`→`a`, `º`→`o`. Previously caused
+  postcondition failures.
+- **Pipeline reordered**: `toLower` now runs after `removeAccents` instead of
+  before. Same final output, but the special-cases table uses natural casing.
+
+### New features
+
+- **85 new transliteration entries**: Roman numerals (Ⅰ–Ⅿ), super/subscript
+  digits (²₂), vulgar fractions (½→1-2), letterlike symbols (№→no, ™→tm,
+  µ→u), currency symbols (€→eur, £→gbp, ¥→y, ₿→btc), common signs
+  (©→c, ®→r, §→s, °→deg, ×→x, ±→pm), and ASCII symbols ($→usd, &→and,
+  @→at, %→pct, +→plus).
+- **Auto-generated transliteration table**: `references/transliterations.csv`
+  shows every special-case entry with its final (post-pipeline) output.
+  Regenerate with `GENERATE=1 go test -run TestGenerateTransliterations`.
+  CI verifies the CSV stays in sync with source.
+- **Failsafe intent** declared in README: every Latin or Latin-adjacent
+  character should produce reasonable ASCII output.
+
+### Other
+
+- README rewritten with elevator pitch, motivation section, and head-to-head
+  comparison table.
+- `docs/` renamed to `dev/` for consistency across repos.
+
 ## v2.0.0 (2026-06-07)
 
 Complete rewrite of the sanitization pipeline with significantly expanded
