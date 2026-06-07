@@ -58,6 +58,28 @@ Currently `go install` only creates the `sanitize` binary. Users must manually `
 
 Show `sanitize` composed with other Unix tools in realistic workflows: `find -print0 | sanitize -0 | xargs -0`, using `tee` to log original names, combining with `sort`/`uniq` to detect would-be collisions before renaming. Inspired by Chapter 5 of *Small, Sharp Software Tools*.
 
+## Review v3.0.0 transliteration design choices (deliberation)
+
+**Priority: high.** The v3.0.0 transliteration expansion was done in a single session and some choices deserve more deliberation:
+
+- **ASCII symbols** ($→usd, &→and, @→at, %→pct, +→plus): are these the right mappings? `&→and` feels natural, but `$→usd` is USD-centric (could be AUD, CAD, etc.). `%→pct` adds content that wasn't alphabetic.
+- **Currency abbreviations** (€→eur, £→gbp, ₿→btc): these are abbreviations, not phonetic transliterations — a different *kind* of special case than ł→l. Are they appropriate for a filename sanitizer?
+- **Vulgar fractions** (½→1-2): is `1-2` a reasonable filename representation of "one half"?
+- **Rejected candidates** (#, ~, *, ^, =, !, ?, |): is the rejection list correct? `#` in particular is debatable — "Issue #42" losing the `#` is arguably worse than "issue-hash42".
+
+Needs dedicated deliberation, not a quick decision. May result in reverting some choices before wider adoption.
+
+## Classic vs extended transliteration mode (`--classic` / `--extended`)
+
+**Priority: medium. Status: idea — needs design work.** Add a flag to switch between "classic" behavior (pre-v3 — symbols just become hyphens) and "extended" behavior (current — symbols transliterated to words/abbreviations). This would let users opt out of opinionated transliterations like &→and or $→usd.
+
+Open questions:
+
+- What's the default? Extended (current) or classic? Changing the default later is a breaking change.
+- Does a mode flag violate the zero-config philosophy that differentiates sanitize from detox?
+- Could this be a build-time flag instead of runtime (bake the choice into the binary)?
+- Is there a simpler design — e.g., only transliterate Latin-script characters (the original scope) and leave symbols as hyphens, making the "extended" set opt-in?
+
 ## Shell completions (bash/zsh)
 
 Hand-written completion scripts for bash and zsh. Only 5 flags so it's simple, but improves discoverability. Could be installed manually or shipped with goreleaser. Inspired by Chapter 6 of *Small, Sharp Software Tools*.
