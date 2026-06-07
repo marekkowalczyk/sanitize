@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -15,7 +14,7 @@ import (
 // Without GENERATE=1, verifies the CSV is up to date.
 
 func buildCSVRows() [][]string {
-	rows := [][]string{{"character", "codepoint", "output", "name"}}
+	rows := [][]string{{"character", "codepoint", "name", "output"}}
 
 	for _, sc := range specialCases {
 		r := []rune(sc.from)
@@ -24,10 +23,14 @@ func buildCSVRows() [][]string {
 		}
 		char := sc.from
 		codepoint := fmt.Sprintf("U+%04X", r[0])
-		output := strings.ToLower(sc.to)
 		name := unicodeName(r[0])
+		output, err := sanitize(sc.from)
+		if err != nil {
+			// Character sanitizes to empty (stripped entirely)
+			output = ""
+		}
 
-		rows = append(rows, []string{char, codepoint, output, name})
+		rows = append(rows, []string{char, codepoint, name, output})
 	}
 	return rows
 }
