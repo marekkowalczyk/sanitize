@@ -55,6 +55,24 @@ Continuous improvement log. Each session ends with a brief review: what went wel
 - When accepting LLM-generated test code, always create it as a separate file rather than replacing existing tests — review before integrating
 - For `filepath.Ext` edge cases, build a small truth table of inputs (empty, dots-only, leading dots, multiple dots) before coding
 
+## 2026-06-07 — v2.0.0 and v3.0.0 release, transliteration table expansion to 190 entries
+
+**What went well:**
+- Moved fast — shipped v2.0.0 and v3.0.0 in one session, with changelog, tests, docs all in sync
+- TDD discipline held: wrote failing tests first for all 85+ new entries, caught pipeline ordering bug before it shipped
+- Good design challenge: user's "why not toLower last?" led to a cleaner architecture
+- Auto-generated transliterations.csv with staleness check is a nice pattern for transparency
+
+**What didn't go well:**
+- Two-commit split was messy — interleaved changes across the same files required temporary reversions and careful staging. Should have planned the commit boundary before starting implementation
+- Version number confusion: old v1.0.0/v1.0.1 tags from early history weren't noticed until after planning to retag. Should check existing tags first
+- Had to fix test expectations multiple times (pipeline ordering, then ASCII symbols cascading through old tests)
+
+**What we'll do differently:**
+- Before starting a multi-commit feature, decide the commit boundary upfront and implement in that order
+- Check `git tag -l` at the start of any release discussion
+- When adding special cases that change output for ASCII characters ($, &, @, %, +), grep the full test suite for those chars *before* implementing — they're more likely to appear in existing tests than Unicode chars
+
 ## 2026-06-07 — Cleanup of stale repo copy, assessment update
 
 **What went well:**
