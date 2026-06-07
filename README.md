@@ -121,12 +121,12 @@ Short flags can be combined: `-fn` is the same as `-f -n`. Long forms are also a
 ## Transformation pipeline
 
 ```
-input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> dedupHyp -> trimEnds -> validate -> output
+input -> removeIllFormed -> removeAccents -> toLower -> replaceNonAlphaNum -> dedupHyp -> trimEnds -> validate -> output
 ```
 
 1. **removeIllFormed** -- replace ill-formed UTF-8 sequences
-2. **toLower** -- lowercase the entire string
-3. **removeAccents** -- NFD decomposition + strip combining marks (unicode.Mn), plus special-case replacements for standalone characters that don't decompose (`ł` -> `l`, `ß` -> `ss`, `№` -> `no`, `€` -> `eur`, etc.)
+2. **removeAccents** -- NFD decomposition + strip combining marks (unicode.Mn), plus special-case replacements for standalone characters that don't decompose (`ł` -> `l`, `ß` -> `ss`, `№` -> `No`, `€` -> `EUR`, etc.)
+3. **toLower** -- lowercase the entire string
 4. **replaceNonAlphaNum** -- replace anything outside `unicode.Latin` and digits with `-`
 5. **dedupHyp** -- collapse runs of `--` into a single `-`
 6. **trimEnds** -- strip leading/trailing non-Latin, non-digit characters

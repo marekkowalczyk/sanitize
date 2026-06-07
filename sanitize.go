@@ -138,11 +138,11 @@ var specialCases = []struct{ from, to string }{
 	{"⅛", "1/8"}, {"⅜", "3/8"}, {"⅝", "5/8"}, {"⅞", "7/8"},
 
 	// --- Letterlike symbols ---
-	{"№", "no"},  // numero sign (U+2116)
-	{"™", "tm"},  // trademark (U+2122)
-	{"℠", "sm"},  // service mark (U+2120)
-	{"℃", "c"},   // degree Celsius (U+2103)
-	{"℉", "f"},   // degree Fahrenheit (U+2109)
+	{"№", "No"},  // numero sign (U+2116)
+	{"™", "TM"},  // trademark (U+2122)
+	{"℠", "SM"},  // service mark (U+2120)
+	{"℃", "C"},   // degree Celsius (U+2103)
+	{"℉", "F"},   // degree Fahrenheit (U+2109)
 	{"ℓ", "l"},   // script small l / liter (U+2113)
 	{"µ", "u"},   // micro sign (U+00B5, not Greek mu)
 
@@ -158,15 +158,15 @@ var specialCases = []struct{ from, to string }{
 
 	// --- Currency symbols ---
 	{"¢", "c"},    // cent (U+00A2)
-	{"£", "gbp"},  // pound (U+00A3)
-	{"¥", "y"},    // yen/yuan (U+00A5)
-	{"€", "eur"},  // euro (U+20AC)
-	{"₹", "rs"},   // Indian rupee (U+20B9)
-	{"₽", "r"},    // Russian ruble (U+20BD)
-	{"₩", "w"},    // Korean won (U+20A9)
-	{"₦", "n"},    // Nigerian naira (U+20A6)
-	{"₺", "tl"},   // Turkish lira (U+20BA)
-	{"₿", "btc"},  // Bitcoin (U+20BF)
+	{"£", "GBP"},  // pound (U+00A3)
+	{"¥", "Y"},    // yen/yuan (U+00A5)
+	{"€", "EUR"},  // euro (U+20AC)
+	{"₹", "Rs"},   // Indian rupee (U+20B9)
+	{"₽", "R"},    // Russian ruble (U+20BD)
+	{"₩", "W"},    // Korean won (U+20A9)
+	{"₦", "N"},    // Nigerian naira (U+20A6)
+	{"₺", "TL"},   // Turkish lira (U+20BA)
+	{"₿", "BTC"},  // Bitcoin (U+20BF)
 }
 
 var (
@@ -220,7 +220,7 @@ func trimEnds(input string) string {
 }
 
 func sanitize(input string) (string, error) {
-	result := trimEnds(dedupHyp(replaceNonAlphaNum(removeAccents(toLower(removeIllFormed(input))))))
+	result := trimEnds(dedupHyp(replaceNonAlphaNum(toLower(removeAccents(removeIllFormed(input))))))
 	if err := validate(result); err != nil {
 		return "", fmt.Errorf("sanitize(%q): postcondition failed: %w", input, err)
 	}

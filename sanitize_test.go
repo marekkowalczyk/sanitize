@@ -1251,7 +1251,8 @@ func TestPipelineOrdering(t *testing.T) {
 		input string
 		want  string
 	}{
-		// Lowering must happen before accent removal (É -> é -> e, not É -> E left as-is)
+		// Accent removal and lowering both run before non-alphanumeric replacement
+		// (É -> E -> e via removeAccents then toLower)
 		{"upper accented", "CAFÉ", "cafe"},
 		{"upper l-stroke", "ŁÓDŹ", "lodz"},
 

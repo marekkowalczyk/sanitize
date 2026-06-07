@@ -72,7 +72,7 @@ Dependencies are managed via Go modules (`go.mod`). External dependencies are `g
 Single-file Go program (`sanitize.go`) with a transformation pipeline composed via function nesting:
 
 ```
-input -> removeIllFormed -> toLower -> removeAccents -> replaceNonAlphaNum -> dedupHyp -> trimEnds -> validate -> output
+input -> removeIllFormed -> removeAccents -> toLower -> replaceNonAlphaNum -> dedupHyp -> trimEnds -> validate -> output
 ```
 
 Key design decisions:

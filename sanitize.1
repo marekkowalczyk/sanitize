@@ -98,15 +98,12 @@ Input is processed through the following stages in order:
 .PP
 .RS 4
 .nf
-removeIllFormed \(-> toLower \(-> removeAccents \(-> replaceNonAlphaNum \(-> dedupHyp \(-> trimEnds \(-> validate
+removeIllFormed \(-> removeAccents \(-> toLower \(-> replaceNonAlphaNum \(-> dedupHyp \(-> trimEnds \(-> validate
 .fi
 .RE
 .TP
 .B removeIllFormed
 Replace ill-formed UTF-8 sequences with U+FFFD.
-.TP
-.B toLower
-Lowercase the entire string.
 .TP
 .B removeAccents
 NFD decomposition followed by removal of combining marks (Unicode Mn category).
@@ -127,6 +124,9 @@ Roman numerals, super/subscript digits, vulgar fractions,
 letterlike symbols (numero, trademark, micro),
 currency symbols (euro, pound, yen, bitcoin),
 and common signs (copyright, registered, section, degree, multiplication).
+.TP
+.B toLower
+Lowercase the entire string.
 .TP
 .B replaceNonAlphaNum
 Replace anything outside
