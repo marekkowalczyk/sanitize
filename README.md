@@ -319,7 +319,7 @@ Because the transformation is lossy, multiple files in the same directory can sa
 
 **Remaining risk -- partial renames:** When renaming multiple files (`-f *.txt`) or recursively (`-r`), the first collision succeeds and subsequent ones are skipped. This leaves you in a half-renamed state: some files moved, others didn't. With `-r` on a deep directory tree this can be especially messy, as some directories may have been renamed while files inside sibling directories were blocked.
 
-**Mitigation:** Always use `-n` (dry run) first on unfamiliar directories to check for collisions before committing to renames. See docs/BACKLOG.md for a planned pre-scan feature that would detect all collisions up front and abort before any renames happen.
+**Mitigation:** Always use `-n` (dry run) first on unfamiliar directories to check for collisions before committing to renames. See dev/BACKLOG.md for a planned pre-scan feature that would detect all collisions up front and abort before any renames happen.
 
 ## Testing
 

@@ -60,7 +60,7 @@ Unicode coverage, file rename capabilities, and safety guarantees.
 - DEVONthink AppleScript for sanitizing record names (shell injection fix
   included).
 - CI workflow (`.github/workflows/test.yml`).
-- Repository reorganized: `docs/`, `contrib/`, `references/`.
+- Repository reorganized: `dev/`, `contrib/`, `references/`.
 
 ## v1.0.1
 
