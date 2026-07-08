@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Docs
+- Added shell-quoting tip to README, `--help` output, and man page: filenames with parentheses or other shell-special characters must be quoted; tab completion, glob patterns, and `-r` are alternatives.
+
 ## v3.0.0 (2026-06-07)
 
 Expanded transliteration coverage from 100 to 190 special-case entries.

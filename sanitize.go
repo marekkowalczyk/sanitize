@@ -512,6 +512,9 @@ Examples:
   san -n *.txt                      → dry run (show renames)
   san -r ~/Downloads/               → recursive rename
   san -rn ~/Downloads/              → recursive dry run
+
+Filenames with shell-special characters (parentheses, brackets, &, !, etc.)
+must be quoted: san "report-(1).pdf"  Tab completion handles this automatically.
 `)
 		} else {
 			fmt.Fprintf(os.Stderr, `Usage: sanitize [flags] <text>...
@@ -537,6 +540,8 @@ Flags:
 
 Use -- to separate flags from arguments starting with -.
 Short flags can be combined: -fn equals -f -n.
+Filenames with shell-special characters (parentheses, brackets, &, !, etc.)
+must be quoted: sanitize -f "report-(1).pdf"  Tab completion handles this automatically.
 
 Examples:
   sanitize "Hello, World!"          → hello-world

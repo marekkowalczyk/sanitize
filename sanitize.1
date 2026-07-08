@@ -234,6 +234,26 @@ overwrite, but partial renames are possible when processing multiple files.
 Always use
 .B \-n
 (dry run) first on unfamiliar directories.
+.PP
+Filenames containing shell-special characters (parentheses, brackets,
+.BR & ,
+.BR ! ,
+etc.) must be quoted or escaped on the command line, because the shell
+interprets them before passing arguments to
+.BR sanitize .
+Example:
+.RS 4
+.nf
+san "report-(1).pdf"
+.fi
+.RE
+Tab completion escapes these automatically.
+A unique glob pattern avoids the issue entirely:
+.RS 4
+.nf
+san report*.pdf
+.fi
+.RE
 .SH SEE ALSO
 .BR mv (1),
 .BR rename (1),

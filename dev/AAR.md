@@ -99,3 +99,16 @@ Continuous improvement log. Each session ends with a brief review: what went wel
 
 **What we'll do differently:**
 - After adding a feature, immediately grep all docs for the flag set to catch drift (the POSIX table miss was found only during close checklist)
+
+## 2026-07-08 — Shell quoting documentation
+
+**What went well:**
+- Root cause identified immediately (shell parsing, not a san bug)
+- Three-doc update (README, help text for both san and sanitize blocks, man page) ensures the tip surfaces wherever users look
+- Including glob and -r as workarounds gives real options beyond just "use quotes"
+
+**What didn't go well:**
+- Nothing significant; tiny session
+
+**What we'll do differently:**
+- Nothing new from this session

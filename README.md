@@ -90,6 +90,8 @@ When the binary is invoked as `san` (via symlink), file rename mode is enabled a
 
 Glob patterns (`*.txt`, `IMG_*.jpg`, etc.) are expanded by the shell before `sanitize` sees them -- this is standard Unix behavior and requires no special handling by the tool.
 
+Filenames with shell-special characters (parentheses, brackets, `&`, `!`, etc.) must be quoted or escaped, because the shell interprets them before passing arguments to the tool: `san "report-(1).pdf"`. Tab completion (Tab key) escapes these automatically. A unique glob avoids typing the name at all: `san report*.pdf`.
+
 ### Recursive rename (`-r`)
 
 ```bash
